@@ -1,0 +1,6 @@
+{
+  "name": "Internship REST API & Database",
+  "description": "Milestone 3 Express REST API with SQLite database, pagination, filtering, input validation, and full automated test suite.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
