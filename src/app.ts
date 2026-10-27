@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import internshipRoutes from './routes/internshipRoutes.js';
 import applicationRoutes from './routes/applicationRoutes.js';
 import { notFoundHandler, errorHandler } from './middleware/errorHandler.js';
+import { requestLogger } from './middleware/logger.js';
 import { getApiExplorerHtml } from './views/apiExplorer.js';
 import { seedDatabase } from './db/database.js';
 
@@ -28,7 +29,6 @@ const allowedOrigins = rawOrigins.split(',').map((s) => s.trim()).filter(Boolean
 app.use(
   cors({
     origin: (origin, callback) => {
-      // In development/test mode without explicit origins, or when origin is in allowed list
       if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -43,6 +43,9 @@ app.use(
 // Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Privacy-Preserving Request Logging
+app.use(requestLogger);
 
 // Rate Limiters
 const isTest = process.env.NODE_ENV === 'test';

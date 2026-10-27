@@ -18,6 +18,7 @@ describe('Internship REST API Test Suite', () => {
 
   beforeAll(() => {
     process.env.NODE_ENV = 'test';
+    process.env.ADMIN_API_KEY = 'test-admin-secret-key-999';
     resetDatabase();
     testDb = getDatabase(':memory:');
     setDatabase(testDb);
@@ -395,8 +396,24 @@ describe('Internship REST API Test Suite', () => {
       expect(res.body.error).toContain('Unauthorized');
     });
 
+    it('should return 401 Unauthorized for GET /api/applications when ADMIN_API_KEY environment secret is not configured', async () => {
+      const tempKey = process.env.ADMIN_API_KEY;
+      delete process.env.ADMIN_API_KEY;
+
+      try {
+        const res = await request(app)
+          .get('/api/applications')
+          .set('x-admin-key', 'any-key');
+        expect(res.status).toBe(401);
+        expect(res.body.success).toBe(false);
+        expect(res.body.error).toContain('ADMIN_API_KEY is not configured');
+      } finally {
+        process.env.ADMIN_API_KEY = tempKey;
+      }
+    });
+
     it('should list submitted applications via GET /api/applications when valid x-admin-key header is provided', async () => {
-      const adminKey = process.env.ADMIN_API_KEY || 'admin-secret-key-123';
+      const adminKey = process.env.ADMIN_API_KEY || 'test-admin-secret-key-999';
       const res = await request(app)
         .get('/api/applications')
         .set('x-admin-key', adminKey);

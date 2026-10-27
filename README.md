@@ -1,27 +1,55 @@
-# Internship REST API & Secure Application Integration
+# Production-Ready Internship REST API & Portal Capstone
 
-> **Internship Assignment - Milestone 3 + Secure Application Integration**  
-> GitHub Repository: [https://github.com/chiranjeevankumar/internship-rest-api](https://github.com/chiranjeevankumar/internship-rest-api)
+> **Student Name**: Chiranjeevan Kumar  
+> **GitHub Repository**: [https://github.com/chiranjeevankumar/internship-rest-api](https://github.com/chiranjeevankumar/internship-rest-api)  
+> **Evidence Document**: [`CAPSTONE_EVIDENCE.md`](./CAPSTONE_EVIDENCE.md) | **Security Checklist**: [`SECURITY_CHECKLIST.md`](./SECURITY_CHECKLIST.md)
 
-A robust, production-grade full-stack RESTful application built with **Node.js**, **Express.js**, **SQLite** (`better-sqlite3`), and **React** (Vite + Tailwind CSS). This project features internship postings CRUD, server-side pagination, search, domain/location filtering, secure internship application submission, Helmet security headers, CORS controls, rate limiting, and automated testing with **Vitest** and **Supertest**.
+A production-grade, full-stack RESTful web application built with **Node.js**, **Express.js**, **SQLite** (`better-sqlite3`), and **React** (Vite + Tailwind CSS). This project features internship postings CRUD, server-side pagination, search, domain/location filtering, job application submission, applicant privacy protection, Helmet security headers, strict CORS controls, Express rate limiting, and automated testing with **Vitest** and **Supertest**.
 
 ---
 
 ## 🌟 Key Features
 
-- ⚡ **Full-Stack Integration**: React frontend (`src/App.tsx`) seamlessly connected to Express REST API backend (`/api/*`) with configurable API base URL (`VITE_API_BASE_URL`).
-- 🗄️ **SQLite Persistence**: Dual relational tables (`internships` and `applications`) with foreign key constraints (`PRAGMA foreign_keys = ON`) and WAL journal mode.
-- 📝 **Application Form**: Interactive application modal with client-side & server-side validation (email regex format, cover letter length 20–2000 chars, name 2–100 chars), duplicate submission prevention, and submission progress indicators.
+- ⚡ **Full-Stack Architecture**: React 19 frontend (`src/App.tsx`) connected to Express REST API backend (`/api/*`) with configurable `VITE_API_BASE_URL`.
+- 🗄️ **Persistent Relational Database**: SQLite persistent database (`data/internships.db`) with relational tables (`internships` and `applications`), foreign key enforcement (`PRAGMA foreign_keys = ON`), and WAL journal mode.
+- 📝 **Validated Application Form**: Real-time client-side & server-side input validation (strict email regex, cover letter 20–2000 chars, name 2–100 chars), duplicate submission prevention, and application reference ID generation.
+- 🔒 **Applicant Privacy Protection**: `GET /api/applications` requires admin API key authorization (`x-admin-key` or `Authorization: Bearer <KEY>`). Unauthenticated requests are rejected with `401 Unauthorized`.
 - 🛡️ **API Security Architecture**:
-  - **Rate Limiting**: `express-rate-limit` on general API routes (100 reqs/15m) and stricter limit on application submission endpoint (5 reqs/15m per IP).
-  - **HTTP Security Headers**: `helmet()` for clickjacking, MIME-sniffing, and XSS defense.
-  - **CORS Control**: Configurable origin restriction via `CLIENT_ORIGIN`.
-  - **SQL Injection Defense**: 100% parameterized SQL queries (`db.prepare(...)`).
-  - **Server-Side Validation**: Never trusts client input alone.
-- 🌱 **Idempotent Seed Records**: Pre-seeded with 5 required initial internship records (`INT-101` to `INT-105`) with descriptions and skills array without duplication on server restart.
+  - **Rate Limiting**: `express-rate-limit` protects general API routes (100 reqs/15m) and applies strict limits on application submissions (5 reqs/15m per IP).
+  - **Helmet Security Headers**: Clickjacking, MIME-type sniffing, and XSS defense headers.
+  - **Strict CORS Control**: Explicit allowed origin matching via `CLIENT_ORIGIN`. Wildcards disallowed in production mode.
+  - **100% Parameterized SQL**: Prepared statements (`db.prepare(...)`) protect all database operations against SQL injection.
+  - **Production Error Masking**: Internal stack traces and raw database errors are suppressed in production mode.
+- 🌱 **Idempotent Seed Script**: Pre-seeded with 5 required initial internship records (`INT-101` to `INT-105`) with descriptions and skills array without duplication on server restart.
 - 🆔 **Auto-Generated IDs**: Server auto-generates IDs (`INT-XXX` for internships, `APP-XXXX` for applications). Clients cannot supply custom IDs on creation.
-- 🧪 **Automated Test Suite**: Vitest + Supertest integration testing running against an isolated in-memory database (`:memory:`) with genuine disk persistence tests.
-- 🌐 **Interactive API Explorer & Application Viewer**: Built-in Explorer UI served at `http://localhost:3000/` allowing live endpoint testing and viewing submitted applications.
+- 🧪 **Automated Test Suite**: Vitest + Supertest integration testing running 25 automated tests against an isolated in-memory test database (`:memory:`) with genuine disk persistence tests.
+- 🌐 **Interactive API Explorer**: Built-in Explorer UI served at `http://localhost:3000/` allowing live endpoint testing and viewing submitted applications.
+
+---
+
+## 💡 Engineering Decisions Explained
+
+For beginners and reviewers, here is why key design decisions were made:
+
+1. **Why SQLite (`better-sqlite3`)?**
+   - SQLite stores data in a simple, portable file on disk without requiring complex database server setup.
+   - `better-sqlite3` runs synchronously in Node.js, making database calls extremely fast (< 12ms) and preventing complex async callback race conditions.
+
+2. **Why Parameterized SQL Queries (`db.prepare`)?**
+   - Directly interpolating user strings into SQL commands allows malicious users to perform SQL Injection attacks.
+   - Parameterized queries separate SQL code from user data, ensuring the database treats user input strictly as text values.
+
+3. **Why Dual Validation (Client + Server)?**
+   - Client validation gives instant, friendly feedback in the UI before sending a network request.
+   - Server validation ensures security because attackers can bypass client code or send custom HTTP requests using cURL or Postman.
+
+4. **Why Privacy Authorization for `GET /api/applications`?**
+   - Applicants submit personal data (full name, email, cover letter). Exposing an open `GET` endpoint would allow web scrapers to harvest personal data.
+   - Requiring `x-admin-key` ensures only authorized administrators can view applicant records.
+
+5. **Why `app.set('trust proxy', 1)`?**
+   - Modern cloud platforms (Cloud Run, Render, Heroku) run Express apps behind reverse proxy load balancers.
+   - Enabling `trust proxy` allows Express and `express-rate-limit` to read the true client IP address from proxy headers without error.
 
 ---
 
@@ -30,7 +58,7 @@ A robust, production-grade full-stack RESTful application built with **Node.js**
 - **Backend Framework**: Express.js (v4.x) on Node.js
 - **Frontend Framework**: React 19 + Vite 8
 - **Database**: SQLite3 via `better-sqlite3` driver
-- **Styling**: Tailwind CSS + Lucide React Icons
+- **Styling & UI**: Tailwind CSS + Lucide React Icons
 - **Security**: Helmet, CORS, Express Rate Limit
 - **Language**: TypeScript / ES Modules (`tsx`)
 - **Testing**: Vitest + Supertest
@@ -53,7 +81,8 @@ internship-rest-api/
 │   │   ├── database.ts         # SQLite connection, schema, seed logic
 │   │   └── seed.ts             # Standalone CLI database seed script
 │   ├── middleware/
-│   │   ├── errorHandler.ts     # Centralized error handler
+│   │   ├── errorHandler.ts     # Centralized production error handler
+│   │   ├── logger.ts           # Privacy-preserving request logging
 │   │   ├── validate.ts         # Validation for internship input
 │   │   └── validateApplication.ts # Validation for application submissions
 │   ├── routes/
@@ -62,8 +91,9 @@ internship-rest-api/
 │   └── views/
 │       └── apiExplorer.ts      # HTML Explorer & Documentation UI
 ├── tests/
-│   └── internship.test.ts      # Automated unit, integration, and persistence tests
+│   └── internship.test.ts      # 25 automated unit, integration, and persistence tests
 ├── .env.example                # Sample environment variables
+├── CAPSTONE_EVIDENCE.md        # Official evidence, test results, accessibility & video script
 ├── SECURITY_CHECKLIST.md       # Documented security protections and roadmap
 ├── package.json                # Project manifest & npm scripts
 ├── server.ts                   # Express server entry point (port 3000)
@@ -87,8 +117,12 @@ NODE_ENV=development
 # Frontend API Base URL for React app
 VITE_API_BASE_URL="/api"
 
-# Allowed CORS Origins (comma-separated or * for development)
-CLIENT_ORIGIN="*"
+# Admin API Key required for accessing private applicant records (GET /api/applications)
+ADMIN_API_KEY="admin-secret-key-123"
+
+# Allowed CORS Origins for production security (Do NOT use wildcard * in production)
+# Multiple origins can be separated by commas
+CLIENT_ORIGIN="https://myinternapp.com"
 ```
 
 ---
@@ -108,13 +142,30 @@ Seed SQLite with the 5 default internship records:
 npm run seed
 ```
 
-### 3. Start Application (Frontend + Express Backend)
+### 3. Start Development Server (Frontend + Express Backend)
 ```bash
 npm run dev
-# Server will run on http://localhost:3000
+# Server runs on http://localhost:3000
 ```
 
-### 4. Run Automated Tests
+### 4. Verify API Health Endpoint
+You can verify backend health and SQLite connection status via cURL or browser:
+```bash
+curl http://localhost:3000/api/health
+```
+**Expected Response (`200 OK`)**:
+```json
+{
+  "success": true,
+  "status": "OK",
+  "message": "Internship REST API service is healthy",
+  "timestamp": "2026-10-27T03:40:00.000Z",
+  "database": "connected",
+  "uptimeSeconds": 15
+}
+```
+
+### 5. Run Automated Tests
 Execute the complete test suite:
 ```bash
 npm test
@@ -146,9 +197,7 @@ The database is populated with the following 5 required internship records:
   "success": true,
   "status": "OK",
   "message": "Internship REST API service is healthy",
-  "timestamp": "2026-10-27T03:15:00.000Z",
-  "database": "connected",
-  "uptimeSeconds": 120
+  "database": "connected"
 }
 ```
 
@@ -206,16 +255,16 @@ The database is populated with the following 5 required internship records:
     "email": "chiranjeevan@example.com",
     "coverLetter": "I am passionate about building responsive, accessible web interfaces...",
     "status": "submitted",
-    "createdAt": "2026-10-27T03:16:00.000Z"
+    "createdAt": "2026-10-27T03:40:00.000Z"
   }
 }
 ```
 
 ---
 
-### 4. Fetch Submitted Applications
+### 4. Fetch Submitted Applications (Admin Protected)
 - **Endpoint**: `GET /api/applications`
-- **Query Params**: `internshipId` *(optional filter)*
+- **Header Required**: `x-admin-key: admin-secret-key-123`
 - **Response (`200 OK`)**:
 ```json
 {
@@ -232,42 +281,39 @@ The database is populated with the following 5 required internship records:
   ]
 }
 ```
-
----
-
-## 🛡️ Security Protections Summary
-
-For full details, view [`SECURITY_CHECKLIST.md`](./SECURITY_CHECKLIST.md).
-- **Helmet Headers**: Clickjacking, MIME sniffing, and XSS defense headers configured.
-- **CORS Protection**: Restricted to allowed origins via `CLIENT_ORIGIN`.
-- **Rate Limiting**: Express rate limiters protect API endpoints and limit spam submission attacks.
-- **SQL Injection Defense**: 100% prepared SQL statements using `better-sqlite3`.
-- **Dual-Layer Validation**: Server-side Express middleware validates and normalizes all incoming fields.
-
----
-
-## 🧪 Automated Testing Verification
-
-Execute all integration and security tests:
-
-```bash
-npm test
+- **Response (`401 Unauthorized`)** *(if header missing/incorrect)*:
+```json
+{
+  "success": false,
+  "error": "Unauthorized. Access to applicant records requires valid admin authorization."
+}
 ```
 
-Verifies:
-- Service health & DB connection
-- Internship CRUD, search, pagination, and filter queries
-- Server auto-generated IDs & rejection of client-supplied IDs
-- Application submission success & database persistence
-- Validation rejections for invalid email format, short cover letters, and missing fields
-- 404 rejection on application submissions for non-existent internship IDs
-- File-based SQLite persistence across database close and reopen operations
+---
+
+## 🚀 Production Deployment Guide
+
+### Deployment Options: Render / Railway / Google Cloud Run
+
+1. **Set Environment Variables in Hosting Control Panel**:
+   - `NODE_ENV="production"`
+   - `PORT=3000`
+   - `ADMIN_API_KEY="your-strong-production-admin-key"`
+   - `CLIENT_ORIGIN="https://your-production-domain.com"`
+   - `VITE_API_BASE_URL="/api"`
+
+2. **Build & Start Commands**:
+   - **Build Command**: `npm run build`
+   - **Start Command**: `npm start` (`tsx server.ts` or `node server.ts`)
+
+3. **Verify Deployment Health**:
+   - Navigate to `https://your-app-domain.com/api/health` to confirm database initialization and service status.
 
 ---
 
 ## 👤 Author & Assignment Details
 
 - **Student Name**: Chiranjeevan Kumar
-- **Assignment**: Milestone 3 + Secure Application Integration
+- **Assignment**: Production-Ready Capstone Project
 - **Repository**: [chiranjeevankumar/internship-rest-api](https://github.com/chiranjeevankumar/internship-rest-api)
 - **License**: MIT

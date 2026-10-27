@@ -223,9 +223,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-500 selection:text-white">
       {/* Navigation Bar */}
-      <header className="border-b border-slate-800 bg-slate-900/80 sticky top-0 z-40 backdrop-blur-md">
+      <header className="border-b border-slate-800 bg-slate-900/90 sticky top-0 z-40 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold">
@@ -235,7 +235,7 @@ export default function App() {
               <h1 className="text-lg font-bold text-white flex items-center gap-2">
                 InternPortal
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                  Secure API Integration
+                  Capstone Project
                 </span>
               </h1>
               <p className="text-xs text-slate-400">Milestone 3 Express & SQLite REST API</p>
@@ -245,19 +245,20 @@ export default function App() {
           <div className="flex items-center space-x-3">
             <button
               onClick={handleOpenApplicationsDrawer}
-              className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-2"
+              aria-label="Open Admin Applications Portal"
+              className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition flex items-center gap-2 min-h-[40px]"
             >
               <Lock className="w-3.5 h-3.5 text-indigo-400" />
-              <span>Admin Records Portal</span>
+              <span>Admin Portal</span>
             </button>
             <a
               href="/"
               target="_blank"
               rel="noreferrer"
-              className="px-3 py-2 text-xs font-semibold rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/30 transition flex items-center gap-1.5"
+              className="px-3 py-2 text-xs font-semibold rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/30 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition flex items-center gap-1.5 min-h-[40px]"
             >
               <Code2 className="w-4 h-4" />
-              <span>API Documentation</span>
+              <span>API Explorer</span>
             </a>
           </div>
         </div>
@@ -265,47 +266,51 @@ export default function App() {
 
       {/* Main Container */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Banner */}
+        {/* Hero Banner */}
         <div className="bg-gradient-to-r from-indigo-900/40 via-slate-900 to-slate-900 border border-indigo-500/20 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Protected Applicant Privacy & Rate Limiting</span>
+              <span>Production-Ready & Privacy Protected</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Explore Available Internships
+              Production Internship Platform
             </h2>
             <p className="text-sm text-slate-300">
-              Find internship opportunities across full stack development, UI/UX, analytics, and security. Submit your application securely to the backend REST API.
+              Explore internship opportunities across full stack development, UI/UX, analytics, and security. Submit your application directly to the SQLite backend.
             </p>
           </div>
 
-          <div className="flex items-center gap-4 text-xs font-mono text-slate-400 bg-slate-950/60 p-3 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-4 text-xs font-mono text-slate-400 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800">
             <div>
-              <span className="text-slate-500 block text-[10px]">API ENDPOINT</span>
+              <span className="text-slate-500 block text-[10px] uppercase tracking-wider font-semibold">REST API Service</span>
               <span className="text-emerald-400 font-semibold">{API_BASE_URL}/internships</span>
             </div>
           </div>
         </div>
 
-        {/* Search & Filter Bar */}
+        {/* Search & Filter Controls */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
           <div className="md:col-span-6 relative">
-            <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-3.5 text-slate-400" />
+            <label htmlFor="searchInput" className="sr-only">Search internships</label>
             <input
+              id="searchInput"
               type="text"
               placeholder="Search by title, skills, location..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
           </div>
 
           <div className="md:col-span-3">
+            <label htmlFor="domainFilterSelect" className="sr-only">Filter by domain</label>
             <select
+              id="domainFilterSelect"
               value={domainFilter}
               onChange={(e) => setDomainFilter(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
               <option value="All">All Domains</option>
               {domains.filter((d) => d !== 'All').map((d) => (
@@ -317,10 +322,12 @@ export default function App() {
           </div>
 
           <div className="md:col-span-3">
+            <label htmlFor="locationFilterSelect" className="sr-only">Filter by location</label>
             <select
+              id="locationFilterSelect"
               value={locationFilter}
               onChange={(e) => setLocationFilter(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2.5 text-sm text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             >
               <option value="All">All Locations</option>
               {locations.filter((l) => l !== 'All').map((l) => (
@@ -336,7 +343,7 @@ export default function App() {
         {loading ? (
           <div className="py-16 text-center space-y-3 bg-slate-900/40 rounded-2xl border border-slate-800/80">
             <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto" />
-            <p className="text-sm font-medium text-slate-300">Loading internships from API...</p>
+            <p className="text-sm font-medium text-slate-300">Fetching internship positions...</p>
           </div>
         ) : error ? (
           <div className="p-6 rounded-2xl bg-rose-950/30 border border-rose-500/30 text-center space-y-3">
@@ -345,7 +352,7 @@ export default function App() {
             <p className="text-xs text-rose-300 max-w-md mx-auto">{error}</p>
             <button
               onClick={fetchInternships}
-              className="px-4 py-2 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition inline-flex items-center gap-1.5"
+              className="px-4 py-2 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white focus:ring-2 focus:ring-rose-400 focus:outline-none transition inline-flex items-center gap-1.5 min-h-[40px]"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Retry Fetch</span>
@@ -354,7 +361,7 @@ export default function App() {
         ) : internships.length === 0 ? (
           <div className="py-16 text-center space-y-3 bg-slate-900/40 rounded-2xl border border-slate-800/80">
             <Briefcase className="w-10 h-10 text-slate-600 mx-auto" />
-            <h3 className="text-base font-bold text-slate-300">No Internships Found</h3>
+            <h3 className="text-base font-bold text-slate-300">No Internships Match Your Criteria</h3>
             <p className="text-xs text-slate-500">Try clearing your search query or filter options.</p>
             <button
               onClick={() => {
@@ -362,7 +369,7 @@ export default function App() {
                 setDomainFilter('All');
                 setLocationFilter('All');
               }}
-              className="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition"
+              className="px-4 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition min-h-[40px]"
             >
               Reset Filters
             </button>
@@ -420,7 +427,8 @@ export default function App() {
                 <div className="pt-6 mt-4 border-t border-slate-800/80">
                   <button
                     onClick={() => handleOpenApplyModal(internship)}
-                    className="w-full py-2.5 px-4 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center justify-center gap-2 group-hover:bg-indigo-500 shadow-lg shadow-indigo-600/20"
+                    aria-label={`Apply for ${internship.title}`}
+                    className="w-full py-2.5 px-4 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center justify-center gap-2 group-hover:bg-indigo-500 focus:ring-2 focus:ring-indigo-400 focus:outline-none shadow-lg shadow-indigo-600/20 min-h-[44px]"
                   >
                     <span>Apply Now</span>
                     <Send className="w-3.5 h-3.5" />
@@ -434,11 +442,17 @@ export default function App() {
 
       {/* Application Form Modal */}
       {isApplying && selectedInternship && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="modalTitle"
+          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto"
+        >
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 shadow-2xl relative my-8">
             <button
               onClick={() => setIsApplying(false)}
-              className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              aria-label="Close application modal"
+              className="absolute top-4 right-4 p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition min-h-[40px] min-w-[40px] flex items-center justify-center"
             >
               <X className="w-5 h-5" />
             </button>
@@ -448,16 +462,18 @@ export default function App() {
                 <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto">
                   <CheckCircle className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold text-white">Application Submitted!</h3>
+                <h3 id="modalTitle" className="text-xl font-bold text-white">
+                  Application Submitted Successfully!
+                </h3>
                 <p className="text-xs text-slate-300">
-                  Your application for <strong className="text-white">{selectedInternship.title}</strong> has been successfully recorded in the SQLite database.
+                  Your application for <strong className="text-white">{selectedInternship.title}</strong> has been securely recorded in the SQLite database.
                 </p>
                 <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs font-mono text-indigo-400">
                   Application Reference ID: {submissionSuccess.id}
                 </div>
                 <button
                   onClick={() => setIsApplying(false)}
-                  className="w-full py-2.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition"
+                  className="w-full py-3 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition min-h-[44px]"
                 >
                   Close Modal
                 </button>
@@ -466,71 +482,88 @@ export default function App() {
               <>
                 <div>
                   <span className="text-xs font-mono text-indigo-400 font-bold">{selectedInternship.id}</span>
-                  <h3 className="text-xl font-bold text-white">Apply for {selectedInternship.title}</h3>
+                  <h3 id="modalTitle" className="text-xl font-bold text-white">
+                    Apply for {selectedInternship.title}
+                  </h3>
                   <p className="text-xs text-slate-400 mt-1">{selectedInternship.domain} • {selectedInternship.location}</p>
                 </div>
 
                 {submissionError && (
-                  <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300 flex items-start gap-2">
+                  <div role="alert" className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300 flex items-start gap-2">
                     <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                     <div>{submissionError}</div>
                   </div>
                 )}
 
                 <form onSubmit={handleSubmitApplication} className="space-y-4">
+                  {/* Full Name */}
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    <label htmlFor="applicantNameInput" className="block text-xs font-semibold text-slate-300 mb-1">
                       Applicant Full Name *
                     </label>
                     <input
+                      id="applicantNameInput"
                       type="text"
                       placeholder="e.g. Chiranjeevan Kumar"
                       value={applicantName}
                       onChange={(e) => setApplicantName(e.target.value)}
                       disabled={submitting}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                      aria-required="true"
+                      aria-invalid={Boolean(formErrors.applicantName)}
+                      aria-describedby={formErrors.applicantName ? "nameError" : undefined}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:opacity-50"
                     />
                     {formErrors.applicantName && (
-                      <p className="text-[11px] text-rose-400 mt-1">{formErrors.applicantName}</p>
+                      <p id="nameError" className="text-[11px] text-rose-400 mt-1 font-medium">{formErrors.applicantName}</p>
                     )}
                   </div>
 
+                  {/* Email */}
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">
+                    <label htmlFor="applicantEmailInput" className="block text-xs font-semibold text-slate-300 mb-1">
                       Email Address *
                     </label>
                     <input
+                      id="applicantEmailInput"
                       type="email"
                       placeholder="e.g. chiranjeevan@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={submitting}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                      aria-required="true"
+                      aria-invalid={Boolean(formErrors.email)}
+                      aria-describedby={formErrors.email ? "emailError" : undefined}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:opacity-50"
                     />
                     {formErrors.email && (
-                      <p className="text-[11px] text-rose-400 mt-1">{formErrors.email}</p>
+                      <p id="emailError" className="text-[11px] text-rose-400 mt-1 font-medium">{formErrors.email}</p>
                     )}
                   </div>
 
+                  {/* Cover Letter */}
                   <div>
                     <div className="flex justify-between items-center mb-1">
-                      <label className="text-xs font-semibold text-slate-300">
+                      <label htmlFor="coverLetterTextarea" className="text-xs font-semibold text-slate-300">
                         Cover Letter *
                       </label>
-                      <span className="text-[10px] text-slate-500">
+                      <span className="text-[10px] text-slate-400 font-mono">
                         {coverLetter.trim().length} / 2000 chars (min 20)
                       </span>
                     </div>
                     <textarea
+                      id="coverLetterTextarea"
                       rows={5}
                       placeholder="Explain briefly why you are a great candidate for this internship position..."
                       value={coverLetter}
                       onChange={(e) => setCoverLetter(e.target.value)}
                       disabled={submitting}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 disabled:opacity-50"
+                      aria-required="true"
+                      aria-invalid={Boolean(formErrors.coverLetter)}
+                      aria-describedby={formErrors.coverLetter ? "letterError" : undefined}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:opacity-50"
                     />
                     {formErrors.coverLetter && (
-                      <p className="text-[11px] text-rose-400 mt-1">{formErrors.coverLetter}</p>
+                      <p id="letterError" className="text-[11px] text-rose-400 mt-1 font-medium">{formErrors.coverLetter}</p>
                     )}
                   </div>
 
@@ -539,14 +572,14 @@ export default function App() {
                       type="button"
                       onClick={() => setIsApplying(false)}
                       disabled={submitting}
-                      className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white transition"
+                      className="px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white transition focus:ring-2 focus:ring-slate-500 focus:outline-none rounded-lg min-h-[44px]"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="px-5 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-600/20"
+                      className="px-5 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition flex items-center gap-2 disabled:opacity-50 focus:ring-2 focus:ring-indigo-400 focus:outline-none shadow-lg shadow-indigo-600/20 min-h-[44px]"
                     >
                       {submitting ? (
                         <>
@@ -568,21 +601,27 @@ export default function App() {
         </div>
       )}
 
-      {/* Submitted Applications Drawer (Admin Privacy Protected) */}
+      {/* Submitted Applications Drawer */}
       {showApplicationsDrawer && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex justify-end">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="drawerTitle"
+          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex justify-end"
+        >
           <div className="bg-slate-900 border-l border-slate-800 max-w-xl w-full h-full p-6 space-y-6 overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <h3 id="drawerTitle" className="text-base font-bold text-white flex items-center gap-2">
                   <Lock className="w-4 h-4 text-indigo-400" />
                   Admin Applications Portal
                 </h3>
-                <p className="text-xs text-slate-400">Requires valid Admin API Key for PII access</p>
+                <p className="text-xs text-slate-400">Requires valid Admin API Key for applicant privacy access</p>
               </div>
               <button
                 onClick={() => setShowApplicationsDrawer(false)}
-                className="p-1 rounded text-slate-400 hover:text-white transition"
+                aria-label="Close admin drawer"
+                className="p-2 rounded text-slate-400 hover:text-white hover:bg-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition min-h-[40px] min-w-[40px] flex items-center justify-center"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -590,21 +629,22 @@ export default function App() {
 
             {/* Admin Key Authentication Input */}
             <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
-              <label className="block text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <label htmlFor="adminKeyInput" className="block text-xs font-semibold text-slate-300 flex items-center gap-1.5">
                 <Key className="w-3.5 h-3.5 text-amber-400" />
                 Enter Admin Authorization API Key:
               </label>
               <div className="flex gap-2">
                 <input
+                  id="adminKeyInput"
                   type="password"
                   placeholder="Enter admin key (e.g. admin-secret-key-123)"
                   value={adminKey}
                   onChange={(e) => setAdminKey(e.target.value)}
-                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono"
                 />
                 <button
                   onClick={() => fetchApplications(adminKey)}
-                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition"
+                  className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white focus:ring-2 focus:ring-indigo-400 focus:outline-none transition min-h-[38px]"
                 >
                   Authenticate
                 </button>
@@ -615,7 +655,7 @@ export default function App() {
             </div>
 
             {appsError && (
-              <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300 flex items-start gap-2">
+              <div role="alert" className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300 flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
                 <div>{appsError}</div>
               </div>

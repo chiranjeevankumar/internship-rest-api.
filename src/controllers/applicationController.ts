@@ -6,8 +6,6 @@ import {
   mapApplicationRowToResponse
 } from '../db/database.js';
 
-export const ADMIN_API_KEY = process.env.ADMIN_API_KEY || 'admin-secret-key-123';
-
 // POST /api/applications
 export function createApplication(req: Request, res: Response): void {
   try {
@@ -67,9 +65,20 @@ export function createApplication(req: Request, res: Response): void {
   }
 }
 
-// GET /api/applications (Protected Endpoint requiring Authorization)
+// GET /api/applications (Protected Endpoint requiring configured ADMIN_API_KEY secret)
 export function getApplications(req: Request, res: Response): void {
   try {
+    const configuredKey = process.env.ADMIN_API_KEY ? process.env.ADMIN_API_KEY.trim() : '';
+
+    if (!configuredKey) {
+      console.warn('[SECURITY WARNING] ADMIN_API_KEY environment secret is not configured on server. Denying admin access safely.');
+      res.status(401).json({
+        success: false,
+        error: 'Unauthorized access. Server environment variable ADMIN_API_KEY is not configured.'
+      });
+      return;
+    }
+
     // Check Authorization header or x-admin-key header
     const authHeader = req.headers['authorization'] || req.headers['x-admin-key'];
     let providedKey = '';
@@ -78,7 +87,7 @@ export function getApplications(req: Request, res: Response): void {
       providedKey = authHeader.replace(/^Bearer\s+/i, '').trim();
     }
 
-    if (!providedKey || providedKey !== ADMIN_API_KEY) {
+    if (!providedKey || providedKey !== configuredKey) {
       res.status(401).json({
         success: false,
         error: 'Unauthorized. Access to applicant records requires valid admin authorization.'
