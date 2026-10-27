@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -84,10 +86,27 @@ try {
   console.error('Failed to auto-seed database on startup:', error);
 }
 
-// Serve Interactive API Documentation & Explorer on GET /
-app.get('/', (req, res) => {
+// Serve static assets from build directory if present
+const distPath = path.resolve(process.cwd(), 'dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+}
+
+// Serve Interactive API Documentation & Explorer on GET /docs
+app.get('/docs', (req, res) => {
   res.setHeader('Content-Type', 'text/html');
   res.send(getApiExplorerHtml());
+});
+
+// Serve root SPA index.html or fallback to API Explorer UI
+app.get('/', (req, res) => {
+  const indexPath = path.join(distPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(getApiExplorerHtml());
+  }
 });
 
 // Mount API routes
