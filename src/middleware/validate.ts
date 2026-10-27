@@ -2,14 +2,12 @@ import { Request, Response, NextFunction } from 'express';
 
 export function validateInternshipInput(isUpdate = false) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    const { id, title, domain, location, skills, openings } = req.body;
+    const { id, title, description, domain, location, skills, openings } = req.body;
     const errors: string[] = [];
 
-    // Optional ID validation on create if provided
+    // Disallow client-supplied ID on creation
     if (!isUpdate && id !== undefined && id !== null) {
-      if (typeof id !== 'string' || id.trim().length === 0) {
-        errors.push("Field 'id' must be a non-empty string if provided.");
-      }
+      errors.push("Field 'id' should not be provided; IDs are auto-generated.");
     }
 
     // Title validation
@@ -18,6 +16,15 @@ export function validateInternshipInput(isUpdate = false) {
         errors.push("Field 'title' is required.");
       } else if (typeof title !== 'string' || title.trim().length < 2) {
         errors.push("Field 'title' must be a string with at least 2 characters.");
+      }
+    }
+
+    // Description validation
+    if (!isUpdate || description !== undefined) {
+      if (description === undefined || description === null) {
+        errors.push("Field 'description' is required.");
+      } else if (typeof description !== 'string' || description.trim().length < 5) {
+        errors.push("Field 'description' must be a string with at least 5 characters.");
       }
     }
 
@@ -45,19 +52,22 @@ export function validateInternshipInput(isUpdate = false) {
         errors.push("Field 'skills' is required.");
       } else if (Array.isArray(skills)) {
         if (skills.length === 0 || skills.some((s) => typeof s !== 'string' || s.trim().length === 0)) {
-          errors.push("Field 'skills' must be a non-empty string or array of non-empty strings.");
+          errors.push("Field 'skills' must be a non-empty array of non-empty strings or string.");
         }
       } else if (typeof skills !== 'string' || skills.trim().length === 0) {
-        errors.push("Field 'skills' must be a non-empty string or array of non-empty strings.");
+        errors.push("Field 'skills' must be a non-empty array of non-empty strings or string.");
       }
     }
 
-    // Openings validation
+    // Openings validation (must be positive integer > 0)
     if (!isUpdate || openings !== undefined) {
       if (openings === undefined || openings === null) {
         errors.push("Field 'openings' is required.");
-      } else if (!Number.isInteger(Number(openings)) || Number(openings) < 0) {
-        errors.push("Field 'openings' must be a non-negative integer (0 or greater).");
+      } else {
+        const openingsNum = Number(openings);
+        if (!Number.isInteger(openingsNum) || openingsNum <= 0) {
+          errors.push("Field 'openings' must be a positive integer greater than zero.");
+        }
       }
     }
 

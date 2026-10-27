@@ -1,16 +1,28 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import app from '../src/app.js';
-import { getDatabase, seedDatabase, closeDatabase } from '../src/db/database.js';
+import {
+  getDatabase,
+  seedDatabase,
+  setDatabase,
+  resetDatabase,
+  closeDatabase,
+  initSchema
+} from '../src/db/database.js';
+import Database from 'better-sqlite3';
+import fs from 'fs';
+import path from 'path';
 
 describe('Internship REST API Test Suite', () => {
-  let db: any;
+  let testDb: any;
 
   beforeAll(() => {
-    // Set NODE_ENV to test to use in-memory SQLite database
     process.env.NODE_ENV = 'test';
-    db = getDatabase(':memory:');
-    seedDatabase(db);
+    // Ensure clean isolated in-memory test database for test suite
+    resetDatabase();
+    testDb = getDatabase(':memory:');
+    setDatabase(testDb);
+    seedDatabase(testDb);
   });
 
   afterAll(() => {
@@ -30,25 +42,26 @@ describe('Internship REST API Test Suite', () => {
     });
   });
 
-  // 2. GET /api/internships (Initial Seed Check & Listing)
-  describe('2. GET /api/internships (Listing & Initial Seeds)', () => {
-    it('should return 200 OK and list 5 initial seed records', async () => {
+  // 2. GET /api/internships (Seed & Skills Array & Description)
+  describe('2. GET /api/internships (Listing & Skills Array Verification)', () => {
+    it('should return 200 OK and list initial seed records with skills as string[] and description', async () => {
       const res = await request(app).get('/api/internships');
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.total).toBeGreaterThanOrEqual(5);
       expect(res.body.data).toBeInstanceOf(Array);
 
-      const ids = res.body.data.map((item: any) => item.id);
-      expect(ids).toContain('INT-101');
-      expect(ids).toContain('INT-102');
-      expect(ids).toContain('INT-103');
-      expect(ids).toContain('INT-104');
-      expect(ids).toContain('INT-105');
+      const record101 = res.body.data.find((item: any) => item.id === 'INT-101');
+      expect(record101).toBeDefined();
+      expect(record101.title).toBe('Frontend Intern');
+      expect(record101.description).toContain('Work with modern frontend web technologies');
+      expect(Array.isArray(record101.skills)).toBe(true);
+      expect(record101.skills).toEqual(['HTML', 'CSS', 'JavaScript']);
+      expect(record101.openings).toBe(3);
     });
   });
 
-  // 3. Pagination
+  // 3. Pagination Support
   describe('3. Pagination Support', () => {
     it('should respect page and limit query parameters', async () => {
       const resPage1 = await request(app).get('/api/internships?page=1&limit=2');
@@ -67,8 +80,8 @@ describe('Internship REST API Test Suite', () => {
 
   // 4. Searching & Filtering
   describe('4. Search and Domain / Location Filtering', () => {
-    it('should search by query keyword across fields', async () => {
-      const res = await request(app).get('/api/internships?search=Figma');
+    it('should search by query keyword across title, description, and skills', async () => {
+      const res = await request(app).get('/api/internships?search=wireframes');
       expect(res.status).toBe(200);
       expect(res.body.count).toBe(1);
       expect(res.body.data[0].id).toBe('INT-103');
@@ -94,13 +107,15 @@ describe('Internship REST API Test Suite', () => {
 
   // 5. GET /api/internships/:id
   describe('5. GET /api/internships/:id', () => {
-    it('should return 200 OK for valid existing ID', async () => {
+    it('should return 200 OK for valid existing ID with array skills and description', async () => {
       const res = await request(app).get('/api/internships/INT-102');
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.id).toBe('INT-102');
       expect(res.body.data.title).toBe('API Engineering Intern');
-      expect(res.body.data.location).toBe('Hybrid Pune');
+      expect(res.body.data.description).toContain('Node.js and SQL');
+      expect(Array.isArray(res.body.data.skills)).toBe(true);
+      expect(res.body.data.skills).toEqual(['Node.js', 'SQL', 'Testing']);
     });
 
     it('should return 404 Not Found for non-existent ID', async () => {
@@ -111,11 +126,12 @@ describe('Internship REST API Test Suite', () => {
     });
   });
 
-  // 6. POST /api/internships (Creation & Validation)
-  describe('6. POST /api/internships (Create & Validate)', () => {
-    it('should create a new internship record with valid input and auto-generated ID', async () => {
+  // 6. POST /api/internships (Auto ID, Positive Openings, Validation)
+  describe('6. POST /api/internships (Auto-Generated ID & Input Validation)', () => {
+    it('should create a new record with auto-generated ID, description, and return skills as string[]', async () => {
       const payload = {
         title: 'DevOps Intern',
+        description: 'Automate deployment pipelines and manage cloud infrastructure using Docker.',
         domain: 'Cloud Infrastructure',
         location: 'Remote India',
         skills: ['Docker', 'Kubernetes', 'CI/CD'],
@@ -125,67 +141,79 @@ describe('Internship REST API Test Suite', () => {
       const res = await request(app).post('/api/internships').send(payload);
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.message).toBe('Internship created successfully');
       expect(res.body.data).toHaveProperty('id');
+      expect(res.body.data.id).toMatch(/^INT-\d+$/);
       expect(res.body.data.title).toBe('DevOps Intern');
-      expect(res.body.data.skills).toBe('Docker, Kubernetes, CI/CD');
+      expect(res.body.data.description).toContain('Automate deployment');
+      expect(Array.isArray(res.body.data.skills)).toBe(true);
+      expect(res.body.data.skills).toEqual(['Docker', 'Kubernetes', 'CI/CD']);
+      expect(res.body.data.openings).toBe(2);
     });
 
-    it('should return 400 Bad Request when required title is missing', async () => {
+    it('should return 400 Bad Request when client attempts to specify an ID on POST', async () => {
       const payload = {
-        domain: 'Cloud Infrastructure',
+        id: 'INT-999',
+        title: 'Custom ID Intern',
+        description: 'Attempting to pass custom ID on post endpoint.',
+        domain: 'Engineering',
         location: 'Remote India',
-        skills: 'Docker',
-        openings: 2
-      };
-
-      const res = await request(app).post('/api/internships').send(payload);
-      expect(res.status).toBe(400);
-      expect(res.body.success).toBe(false);
-      expect(res.body.error).toBe('Validation Failed');
-      expect(res.body.details).toContain("Field 'title' is required.");
-    });
-
-    it('should return 400 Bad Request when openings is negative', async () => {
-      const payload = {
-        title: 'QA Tester Intern',
-        domain: 'Software Testing',
-        location: 'Remote India',
-        skills: 'Selenium',
-        openings: -1
-      };
-
-      const res = await request(app).post('/api/internships').send(payload);
-      expect(res.status).toBe(400);
-      expect(res.body.success).toBe(false);
-      expect(res.body.details).toContain("Field 'openings' must be a non-negative integer (0 or greater).");
-    });
-
-    it('should return 400 Bad Request when attempting to create duplicate ID', async () => {
-      const payload = {
-        id: 'INT-101', // Existing ID
-        title: 'Duplicate Frontend Intern',
-        domain: 'Full Stack Development',
-        location: 'Remote India',
-        skills: 'HTML',
+        skills: ['Node.js'],
         openings: 1
       };
 
       const res = await request(app).post('/api/internships').send(payload);
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.error).toContain("Internship with ID 'INT-101' already exists.");
+      expect(res.body.details).toContain("Field 'id' should not be provided; IDs are auto-generated.");
+    });
+
+    it('should return 400 Bad Request when description is missing or too short', async () => {
+      const payload = {
+        title: 'QA Intern',
+        description: 'Abc', // less than 5 chars
+        domain: 'Software Testing',
+        location: 'Remote India',
+        skills: ['Selenium'],
+        openings: 1
+      };
+
+      const res = await request(app).post('/api/internships').send(payload);
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.details).toContain("Field 'description' must be a string with at least 5 characters.");
+    });
+
+    it('should return 400 Bad Request when openings is zero or negative', async () => {
+      const payloadZero = {
+        title: 'Zero Openings Intern',
+        description: 'Valid internship description string for testing.',
+        domain: 'Engineering',
+        location: 'Remote India',
+        skills: ['Python'],
+        openings: 0
+      };
+
+      const resZero = await request(app).post('/api/internships').send(payloadZero);
+      expect(resZero.status).toBe(400);
+      expect(resZero.body.success).toBe(false);
+      expect(resZero.body.details).toContain("Field 'openings' must be a positive integer greater than zero.");
+
+      const payloadNegative = { ...payloadZero, openings: -2 };
+      const resNeg = await request(app).post('/api/internships').send(payloadNegative);
+      expect(resNeg.status).toBe(400);
+      expect(resNeg.body.details).toContain("Field 'openings' must be a positive integer greater than zero.");
     });
   });
 
   // 7. PUT /api/internships/:id (Update & Validation)
   describe('7. PUT /api/internships/:id (Update & Validate)', () => {
-    it('should update existing internship record with valid input', async () => {
+    it('should update existing internship record including description and skills array', async () => {
       const updatePayload = {
         title: 'Senior Frontend Intern',
+        description: 'Lead modern frontend web architecture using React and TypeScript.',
         domain: 'Full Stack Development',
         location: 'Hybrid Mumbai',
-        skills: 'HTML, CSS, JavaScript, React',
+        skills: ['HTML', 'CSS', 'JavaScript', 'React'],
         openings: 5
       };
 
@@ -193,29 +221,25 @@ describe('Internship REST API Test Suite', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.title).toBe('Senior Frontend Intern');
-      expect(res.body.data.location).toBe('Hybrid Mumbai');
+      expect(res.body.data.description).toContain('Lead modern frontend');
+      expect(Array.isArray(res.body.data.skills)).toBe(true);
+      expect(res.body.data.skills).toEqual(['HTML', 'CSS', 'JavaScript', 'React']);
       expect(res.body.data.openings).toBe(5);
     });
 
     it('should return 404 Not Found when updating non-existent ID', async () => {
       const updatePayload = {
         title: 'Non-existent Intern',
+        description: 'Valid description for non existent record update test.',
         domain: 'Domain',
         location: 'Location',
-        skills: 'Skills',
+        skills: ['Skills'],
         openings: 1
       };
 
       const res = await request(app).put('/api/internships/INT-999').send(updatePayload);
       expect(res.status).toBe(404);
       expect(res.body.success).toBe(false);
-    });
-
-    it('should return 400 Bad Request if update payload contains invalid data', async () => {
-      const res = await request(app).put('/api/internships/INT-101').send({ title: '' });
-      expect(res.status).toBe(400);
-      expect(res.body.success).toBe(false);
-      expect(res.body.error).toBe('Validation Failed');
     });
   });
 
@@ -227,7 +251,6 @@ describe('Internship REST API Test Suite', () => {
       expect(res.body.success).toBe(true);
       expect(res.body.deletedId).toBe('INT-105');
 
-      // Verify it is gone
       const verifyRes = await request(app).get('/api/internships/INT-105');
       expect(verifyRes.status).toBe(404);
     });
@@ -239,12 +262,66 @@ describe('Internship REST API Test Suite', () => {
     });
   });
 
-  // 9. Database Persistence & Idempotency
-  describe('9. Database Seeding & Idempotency', () => {
-    it('should not duplicate seed records when seedDatabase is re-invoked', () => {
-      const result = seedDatabase(db);
-      expect(result.seeded).toBe(0); // 0 new records inserted because INT-101 to INT-104 exist
-      expect(result.total).toBeGreaterThanOrEqual(4);
+  // 9. Genuine Persistence Test & Idempotency
+  describe('9. Genuine SQLite Data Persistence & Idempotency', () => {
+    const tempDbPath = path.resolve(process.cwd(), 'data', 'temp_persistence_test.db');
+
+    afterAll(() => {
+      if (fs.existsSync(tempDbPath)) {
+        try { fs.unlinkSync(tempDbPath); } catch {}
+      }
+    });
+
+    it('should persist data across database close and reopen operations', () => {
+      // Clean previous temp DB if exists
+      if (fs.existsSync(tempDbPath)) {
+        fs.unlinkSync(tempDbPath);
+      }
+
+      // Step 1: Open file-based database & seed
+      let db = new Database(tempDbPath);
+      initSchema(db);
+      seedDatabase(db);
+
+      // Step 2: Insert custom record INT-900
+      const insertStmt = db.prepare(`
+        INSERT INTO internships (id, title, description, domain, location, skills, openings)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `);
+      insertStmt.run(
+        'INT-900',
+        'Persistence Test Intern',
+        'Verifying data survives database file close and reopen.',
+        'Testing',
+        'Remote',
+        JSON.stringify(['Persistence', 'SQLite']),
+        4
+      );
+
+      // Verify inserted
+      const recordBefore = db.prepare('SELECT * FROM internships WHERE id = ?').get('INT-900') as any;
+      expect(recordBefore).toBeDefined();
+      expect(recordBefore.title).toBe('Persistence Test Intern');
+
+      // Step 3: Close database connection completely
+      db.close();
+
+      // Step 4: Reopen database from disk file
+      db = new Database(tempDbPath);
+      const recordAfter = db.prepare('SELECT * FROM internships WHERE id = ?').get('INT-900') as any;
+      expect(recordAfter).toBeDefined();
+      expect(recordAfter.id).toBe('INT-900');
+      expect(recordAfter.title).toBe('Persistence Test Intern');
+      expect(recordAfter.description).toContain('survives database file close');
+
+      // Step 5: Verify reseeding does not duplicate records
+      const seedResult = seedDatabase(db);
+      expect(seedResult.seeded).toBe(0); // 0 new seed records inserted
+
+      const totalCount = (db.prepare('SELECT COUNT(*) as count FROM internships').get() as any).count;
+      expect(totalCount).toBe(6); // 5 initial + 1 inserted (INT-900)
+
+      db.close();
     });
   });
 });

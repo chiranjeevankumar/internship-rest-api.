@@ -148,8 +148,10 @@ export function getApiExplorerHtml(): string {
                 </div>
                 <button onclick="executePostInternship()" class="px-2.5 py-1 text-xs font-semibold rounded bg-emerald-600 hover:bg-emerald-500 text-white transition">Create Record</button>
               </div>
-              <textarea id="postJsonBody" rows="4" class="w-full text-xs font-mono bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500">{
+              <p class="text-[11px] text-slate-400">ID is auto-generated automatically by the server.</p>
+              <textarea id="postJsonBody" rows="5" class="w-full text-xs font-mono bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500">{
   "title": "Backend Engineering Intern",
+  "description": "Develop high-performance REST APIs and microservices using Express and SQLite.",
   "domain": "Cloud & Infrastructure",
   "location": "Remote India",
   "skills": ["Node.js", "Express", "SQLite"],
@@ -174,11 +176,12 @@ export function getApiExplorerHtml(): string {
                 <input id="putIdInput" type="text" value="INT-101" placeholder="ID to update" class="w-28 text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-indigo-500">
                 <span class="text-xs text-slate-400 self-center">Target Record ID</span>
               </div>
-              <textarea id="putJsonBody" rows="4" class="w-full text-xs font-mono bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500">{
+              <textarea id="putJsonBody" rows="5" class="w-full text-xs font-mono bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500">{
   "title": "Senior Frontend Intern",
+  "description": "Lead frontend component architecture with React, TypeScript, and modern CSS tools.",
   "domain": "Full Stack Development",
   "location": "Remote India",
-  "skills": "React, TypeScript, Tailwind CSS, HTML/CSS",
+  "skills": ["HTML", "CSS", "JavaScript", "React"],
   "openings": 5
 }</textarea>
             </div>
@@ -234,10 +237,10 @@ export function getApiExplorerHtml(): string {
               <thead class="bg-slate-900/90 text-slate-400 uppercase text-[10px] tracking-wider">
                 <tr>
                   <th class="p-2 border-b border-slate-700">ID</th>
-                  <th class="p-2 border-b border-slate-700">Title</th>
+                  <th class="p-2 border-b border-slate-700">Title & Description</th>
                   <th class="p-2 border-b border-slate-700">Domain</th>
                   <th class="p-2 border-b border-slate-700">Location</th>
-                  <th class="p-2 border-b border-slate-700">Skills</th>
+                  <th class="p-2 border-b border-slate-700">Skills Array</th>
                   <th class="p-2 border-b border-slate-700 text-right">Openings</th>
                 </tr>
               </thead>
@@ -280,7 +283,6 @@ export function getApiExplorerHtml(): string {
 
         outputEl.textContent = JSON.stringify(data, null, 2);
 
-        // Auto refresh table if modifying DB
         if (['POST', 'PUT', 'DELETE'].includes(options.method)) {
           refreshDatabaseTable();
         }
@@ -359,15 +361,16 @@ export function getApiExplorerHtml(): string {
 
     function setInvalidPostPayload() {
       document.getElementById('postJsonBody').value = JSON.stringify({
-        title: "A", // too short
-        domain: "",
-        openings: -5 // invalid negative
+        title: "A",
+        description: "Short",
+        openings: 0 // invalid openings <= 0
       }, null, 2);
     }
 
     function resetPostPayload() {
       document.getElementById('postJsonBody').value = JSON.stringify({
         title: "Backend Engineering Intern",
+        description: "Develop high-performance REST APIs and microservices using Express and SQLite.",
         domain: "Cloud & Infrastructure",
         location: "Remote India",
         skills: ["Node.js", "Express", "SQLite"],
@@ -383,12 +386,17 @@ export function getApiExplorerHtml(): string {
         if (json.success && json.data) {
           tbody.innerHTML = json.data.map(item => \`
             <tr class="hover:bg-slate-800/50 font-mono">
-              <td class="p-2 text-indigo-400 font-bold">\${item.id}</td>
-              <td class="p-2 font-sans text-white font-medium">\${item.title}</td>
+              <td class="p-2 text-indigo-400 font-bold font-mono">\${item.id}</td>
+              <td class="p-2 font-sans">
+                <div class="text-white font-medium">\${item.title}</div>
+                <div class="text-slate-400 text-[11px] truncate max-w-[200px]">\${item.description}</div>
+              </td>
               <td class="p-2 font-sans text-slate-300">\${item.domain}</td>
               <td class="p-2 font-sans text-slate-300">\${item.location}</td>
-              <td class="p-2 font-sans text-slate-400 text-[11px] max-w-[150px] truncate">\${item.skills}</td>
-              <td class="p-2 text-right text-emerald-400 font-bold">\${item.openings}</td>
+              <td class="p-2 font-sans text-emerald-400 text-[11px]">
+                \${Array.isArray(item.skills) ? item.skills.join(', ') : item.skills}
+              </td>
+              <td class="p-2 text-right text-indigo-300 font-bold font-mono">\${item.openings}</td>
             </tr>
           \`).join('');
         }
@@ -397,7 +405,6 @@ export function getApiExplorerHtml(): string {
       }
     }
 
-    // Auto load on init
     window.addEventListener('DOMContentLoaded', () => {
       fetchApi('/api/health');
       refreshDatabaseTable();
