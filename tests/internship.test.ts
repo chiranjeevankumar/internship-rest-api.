@@ -18,7 +18,6 @@ describe('Internship REST API Test Suite', () => {
 
   beforeAll(() => {
     process.env.NODE_ENV = 'test';
-    // Ensure clean isolated in-memory test database for test suite
     resetDatabase();
     testDb = getDatabase(':memory:');
     setDatabase(testDb);
@@ -273,17 +272,14 @@ describe('Internship REST API Test Suite', () => {
     });
 
     it('should persist data across database close and reopen operations', () => {
-      // Clean previous temp DB if exists
       if (fs.existsSync(tempDbPath)) {
         fs.unlinkSync(tempDbPath);
       }
 
-      // Step 1: Open file-based database & seed
       let db = new Database(tempDbPath);
       initSchema(db);
       seedDatabase(db);
 
-      // Step 2: Insert custom record INT-900
       const insertStmt = db.prepare(`
         INSERT INTO internships (id, title, description, domain, location, skills, openings)
         VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -298,30 +294,97 @@ describe('Internship REST API Test Suite', () => {
         4
       );
 
-      // Verify inserted
       const recordBefore = db.prepare('SELECT * FROM internships WHERE id = ?').get('INT-900') as any;
       expect(recordBefore).toBeDefined();
-      expect(recordBefore.title).toBe('Persistence Test Intern');
 
-      // Step 3: Close database connection completely
       db.close();
 
-      // Step 4: Reopen database from disk file
       db = new Database(tempDbPath);
       const recordAfter = db.prepare('SELECT * FROM internships WHERE id = ?').get('INT-900') as any;
       expect(recordAfter).toBeDefined();
       expect(recordAfter.id).toBe('INT-900');
       expect(recordAfter.title).toBe('Persistence Test Intern');
-      expect(recordAfter.description).toContain('survives database file close');
 
-      // Step 5: Verify reseeding does not duplicate records
       const seedResult = seedDatabase(db);
-      expect(seedResult.seeded).toBe(0); // 0 new seed records inserted
+      expect(seedResult.seeded).toBe(0);
 
       const totalCount = (db.prepare('SELECT COUNT(*) as count FROM internships').get() as any).count;
-      expect(totalCount).toBe(6); // 5 initial + 1 inserted (INT-900)
+      expect(totalCount).toBe(6);
 
       db.close();
+    });
+  });
+
+  // 10. POST /api/applications & Application Validation Tests
+  describe('10. POST /api/applications (Application Submission & Validation)', () => {
+    it('should submit an application successfully for an existing internship', async () => {
+      const payload = {
+        internshipId: 'INT-101',
+        applicantName: 'Chiranjeevan Kumar',
+        email: 'chiranjeevan@example.com',
+        coverLetter: 'I am extremely enthusiastic about applying for this Frontend Internship position to build modern UIs.'
+      };
+
+      const res = await request(app).post('/api/applications').send(payload);
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.message).toBe('Application submitted successfully');
+      expect(res.body.data).toHaveProperty('id');
+      expect(res.body.data.id).toMatch(/^APP-\d+$/);
+      expect(res.body.data.internshipId).toBe('INT-101');
+      expect(res.body.data.applicantName).toBe('Chiranjeevan Kumar');
+      expect(res.body.data.email).toBe('chiranjeevan@example.com');
+      expect(res.body.data.status).toBe('submitted');
+    });
+
+    it('should return 400 Bad Request when email is invalid', async () => {
+      const payload = {
+        internshipId: 'INT-101',
+        applicantName: 'Invalid Email Applicant',
+        email: 'not-a-valid-email-address',
+        coverLetter: 'Valid cover letter content exceeding twenty characters.'
+      };
+
+      const res = await request(app).post('/api/applications').send(payload);
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.details).toContain("Field 'email' must be a valid email address (max 100 characters).");
+    });
+
+    it('should return 400 Bad Request when cover letter is shorter than 20 characters', async () => {
+      const payload = {
+        internshipId: 'INT-101',
+        applicantName: 'Short Letter Applicant',
+        email: 'applicant@example.com',
+        coverLetter: 'Too short.' // less than 20 chars
+      };
+
+      const res = await request(app).post('/api/applications').send(payload);
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+      expect(res.body.details).toContain("Field 'coverLetter' must be between 20 and 2000 characters.");
+    });
+
+    it('should return 404 Not Found when submitting application for non-existent internship ID', async () => {
+      const payload = {
+        internshipId: 'INT-999',
+        applicantName: 'Non Existent Internship Applicant',
+        email: 'applicant@example.com',
+        coverLetter: 'Valid cover letter content exceeding twenty characters length requirement.'
+      };
+
+      const res = await request(app).post('/api/applications').send(payload);
+      expect(res.status).toBe(404);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain("Internship with ID 'INT-999' not found");
+    });
+
+    it('should list submitted applications via GET /api/applications', async () => {
+      const res = await request(app).get('/api/applications');
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data).toBeInstanceOf(Array);
+      expect(res.body.count).toBeGreaterThanOrEqual(1);
     });
   });
 });

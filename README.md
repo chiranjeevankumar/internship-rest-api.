@@ -1,37 +1,39 @@
-# Internship REST API & Database Service
+# Internship REST API & Secure Application Integration
 
-> **Internship Assignment - Milestone 3: REST API and Persistent Data**  
+> **Internship Assignment - Milestone 3 + Secure Application Integration**  
 > GitHub Repository: [https://github.com/chiranjeevankumar/internship-rest-api](https://github.com/chiranjeevankumar/internship-rest-api)
 
-A robust, production-ready RESTful API built with **Node.js**, **Express.js**, and **SQLite** (`better-sqlite3`). This service handles internship postings with complete CRUD operations, parameterized SQL queries, server-side pagination, search, domain/location filtering, input validation, auto-generated IDs, idempotent seed data, and a full automated test suite using **Vitest** and **Supertest**.
+A robust, production-grade full-stack RESTful application built with **Node.js**, **Express.js**, **SQLite** (`better-sqlite3`), and **React** (Vite + Tailwind CSS). This project features internship postings CRUD, server-side pagination, search, domain/location filtering, secure internship application submission, Helmet security headers, CORS controls, rate limiting, and automated testing with **Vitest** and **Supertest**.
 
 ---
 
 ## 🌟 Key Features
 
-- ⚡ **RESTful API Architecture**: Clean JSON endpoints returning consistent responses and standard HTTP status codes (`200`, `201`, `400`, `404`, `500`).
-- 🗄️ **Persistent Data Storage**: SQLite database with file persistence (`data/internships.db`), auto-schema initialization, and WAL journal mode.
-- 📝 **Structured Schema**: Includes `id`, `title`, `description`, `domain`, `location`, `skills` (returned as string array `string[]`), `openings` (positive integer > 0), `created_at`, and `updated_at`.
-- 🌱 **Idempotent Seed Script**: Pre-seeded with 5 required initial records (`INT-101` to `INT-105`) using `INSERT OR IGNORE` to prevent duplication on server restarts.
-- 🆔 **Auto-Generated IDs**: Server automatically generates sequential `INT-XXX` IDs upon creation. Clients cannot supply custom IDs on POST.
-- 🔍 **Filtering, Search & Pagination**:
-  - Full-text search across `title`, `description`, `domain`, `location`, and `skills`.
-  - Exact or partial filter by `domain` and `location`.
-  - Configurable page number (`page`) and items per page (`limit`).
-- 🛡️ **Strict Input Validation**: Validates all incoming payloads for correct data types, non-empty text, min description length (5 chars), positive openings (> 0), and auto-generated IDs.
-- 🧪 **Automated Test Suite**: Vitest + Supertest integration testing running against an isolated in-memory test database (`:memory:`) with genuine disk persistence tests.
-- 🌐 **Interactive API Explorer**: Built-in interactive GUI served at `http://localhost:3000/` for live endpoint testing right from the browser.
+- ⚡ **Full-Stack Integration**: React frontend (`src/App.tsx`) seamlessly connected to Express REST API backend (`/api/*`) with configurable API base URL (`VITE_API_BASE_URL`).
+- 🗄️ **SQLite Persistence**: Dual relational tables (`internships` and `applications`) with foreign key constraints (`PRAGMA foreign_keys = ON`) and WAL journal mode.
+- 📝 **Application Form**: Interactive application modal with client-side & server-side validation (email regex format, cover letter length 20–2000 chars, name 2–100 chars), duplicate submission prevention, and submission progress indicators.
+- 🛡️ **API Security Architecture**:
+  - **Rate Limiting**: `express-rate-limit` on general API routes (100 reqs/15m) and stricter limit on application submission endpoint (5 reqs/15m per IP).
+  - **HTTP Security Headers**: `helmet()` for clickjacking, MIME-sniffing, and XSS defense.
+  - **CORS Control**: Configurable origin restriction via `CLIENT_ORIGIN`.
+  - **SQL Injection Defense**: 100% parameterized SQL queries (`db.prepare(...)`).
+  - **Server-Side Validation**: Never trusts client input alone.
+- 🌱 **Idempotent Seed Records**: Pre-seeded with 5 required initial internship records (`INT-101` to `INT-105`) with descriptions and skills array without duplication on server restart.
+- 🆔 **Auto-Generated IDs**: Server auto-generates IDs (`INT-XXX` for internships, `APP-XXXX` for applications). Clients cannot supply custom IDs on creation.
+- 🧪 **Automated Test Suite**: Vitest + Supertest integration testing running against an isolated in-memory database (`:memory:`) with genuine disk persistence tests.
+- 🌐 **Interactive API Explorer & Application Viewer**: Built-in Explorer UI served at `http://localhost:3000/` allowing live endpoint testing and viewing submitted applications.
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **Runtime**: Node.js (v18+)
-- **Framework**: Express.js (v4.x)
+- **Backend Framework**: Express.js (v4.x) on Node.js
+- **Frontend Framework**: React 19 + Vite 8
 - **Database**: SQLite3 via `better-sqlite3` driver
+- **Styling**: Tailwind CSS + Lucide React Icons
+- **Security**: Helmet, CORS, Express Rate Limit
 - **Language**: TypeScript / ES Modules (`tsx`)
 - **Testing**: Vitest + Supertest
-- **Styling (API Explorer)**: Tailwind CSS
 
 ---
 
@@ -40,28 +42,53 @@ A robust, production-ready RESTful API built with **Node.js**, **Express.js**, a
 ```
 internship-rest-api/
 ├── data/
-│   └── internships.db          # SQLite persistent database file (created on startup)
+│   └── internships.db          # SQLite persistent database file
 ├── src/
-│   ├── app.ts                  # Express app initialization, middleware & routes
+│   ├── app.ts                  # Express app setup, Helmet, CORS, Rate Limiters
+│   ├── App.tsx                 # React Frontend App (Internship cards, filters, application modal)
 │   ├── controllers/
-│   │   └── internshipController.ts # Logic for API endpoints (CRUD, search, pagination)
+│   │   ├── internshipController.ts  # Internship CRUD logic
+│   │   └── applicationController.ts # Application submission & listing logic
 │   ├── db/
-│   │   ├── database.ts         # SQLite connection, schema, JSON skills mapping, seed logic
+│   │   ├── database.ts         # SQLite connection, schema, seed logic
 │   │   └── seed.ts             # Standalone CLI database seed script
 │   ├── middleware/
-│   │   ├── errorHandler.ts     # Centralized 404 & 500 error handlers
-│   │   └── validate.ts         # Input validation middleware for POST & PUT
+│   │   ├── errorHandler.ts     # Centralized error handler
+│   │   ├── validate.ts         # Validation for internship input
+│   │   └── validateApplication.ts # Validation for application submissions
 │   ├── routes/
-│   │   └── internshipRoutes.ts # Express router for /api endpoints
+│   │   ├── internshipRoutes.ts  # Router for /api/internships
+│   │   └── applicationRoutes.ts # Router for /api/applications
 │   └── views/
-│       └── apiExplorer.ts      # Interactive HTML Explorer GUI served on GET /
+│       └── apiExplorer.ts      # HTML Explorer & Documentation UI
 ├── tests/
-│   └── internship.test.ts      # Automated unit, integration & persistence tests
-├── .gitignore                  # Ignores node_modules, database files, logs
-├── package.json                # Project dependencies and npm scripts
-├── server.ts                   # Main server entry point (runs Express on port 3000)
+│   └── internship.test.ts      # Automated unit, integration, and persistence tests
+├── .env.example                # Sample environment variables
+├── SECURITY_CHECKLIST.md       # Documented security protections and roadmap
+├── package.json                # Project manifest & npm scripts
+├── server.ts                   # Express server entry point (port 3000)
 ├── tsconfig.json               # TypeScript configuration
 └── README.md                   # Complete documentation
+```
+
+---
+
+## ⚙️ Environment Variables
+
+Copy `.env.example` to `.env` to configure environment variables:
+
+```env
+# Application Server Port
+PORT=3000
+
+# Node Environment (development, production, test)
+NODE_ENV=development
+
+# Frontend API Base URL for React app
+VITE_API_BASE_URL="/api"
+
+# Allowed CORS Origins (comma-separated or * for development)
+CLIENT_ORIGIN="*"
 ```
 
 ---
@@ -76,41 +103,28 @@ npm install
 ```
 
 ### 2. Seed the Database
-Seed the SQLite database with the 5 default internship records:
+Seed SQLite with the 5 default internship records:
 ```bash
 npm run seed
 ```
 
-### 3. Start Development Server
+### 3. Start Application (Frontend + Express Backend)
 ```bash
 npm run dev
 # Server will run on http://localhost:3000
 ```
 
 ### 4. Run Automated Tests
-Execute the complete test suite against the in-memory test database:
+Execute the complete test suite:
 ```bash
 npm test
 ```
 
 ---
 
-## 📜 Available NPM Scripts
-
-| Command | Description |
-| :--- | :--- |
-| `npm start` | Runs production server (`tsx server.ts`) |
-| `npm run dev` | Runs development server with auto-reload (`tsx server.ts`) |
-| `npm test` | Executes automated Vitest + Supertest test suite |
-| `npm run seed` | Explicitly seeds the SQLite database with initial records |
-| `npm run lint` | Runs TypeScript type checking (`tsc --noEmit`) |
-| `npm run clean` | Removes compiled output and database files |
-
----
-
 ## 📊 Initial Seed Records
 
-The database is populated with the following 5 initial internship records:
+The database is populated with the following 5 required internship records:
 
 | ID | Title | Description | Domain | Location | Skills Array | Openings |
 | :--- | :--- | :--- | :--- | :--- | :--- | :---: |
@@ -126,55 +140,41 @@ The database is populated with the following 5 initial internship records:
 
 ### 1. Health Check
 - **Endpoint**: `GET /api/health`
-- **Description**: Verifies API service uptime and database connection status.
-- **HTTP Code**: `200 OK`
-- **Sample Response**:
+- **Response (`200 OK`)**:
 ```json
 {
   "success": true,
   "status": "OK",
   "message": "Internship REST API service is healthy",
-  "timestamp": "2026-10-27T02:55:00.000Z",
+  "timestamp": "2026-10-27T03:15:00.000Z",
   "database": "connected",
-  "uptimeSeconds": 45
+  "uptimeSeconds": 120
 }
 ```
 
 ---
 
-### 2. List Internships (with Pagination, Search & Filters)
+### 2. List Internships
 - **Endpoint**: `GET /api/internships`
-- **Description**: Retrieves paginated list of internships with optional search query and filters.
-- **Query Parameters**:
-  - `page` *(number, optional)*: Page number (default: `1`).
-  - `limit` *(number, optional)*: Items per page (default: `10`, max: `100`).
-  - `search` or `q` *(string, optional)*: Search keyword across title, description, domain, location, and skills.
-  - `domain` *(string, optional)*: Filter by domain (e.g., `Full Stack`).
-  - `location` *(string, optional)*: Filter by location (e.g., `Remote`).
-  - `sort` *(string, optional)*: Field to sort by (`created_at`, `title`, `openings`, `id`).
-  - `order` *(string, optional)*: `ASC` or `DESC` (default: `DESC`).
-- **HTTP Code**: `200 OK`
-- **Sample Request**: `GET /api/internships?search=Remote&page=1&limit=5`
-- **Sample Response**:
+- **Query Params**: `page`, `limit`, `search`, `domain`, `location`, `sort`, `order`
+- **Response (`200 OK`)**:
 ```json
 {
   "success": true,
-  "count": 3,
-  "total": 3,
+  "count": 5,
+  "total": 5,
   "page": 1,
-  "limit": 5,
+  "limit": 10,
   "totalPages": 1,
   "data": [
     {
       "id": "INT-101",
       "title": "Frontend Intern",
-      "description": "Work with modern frontend web technologies to build responsive user interfaces and interactive components.",
+      "description": "Work with modern frontend web technologies to build responsive user interfaces.",
       "domain": "Full Stack Development",
       "location": "Remote India",
       "skills": ["HTML", "CSS", "JavaScript"],
-      "openings": 3,
-      "created_at": "2026-10-27 02:55:00",
-      "updated_at": "2026-10-27 02:55:00"
+      "openings": 3
     }
   ]
 }
@@ -182,171 +182,92 @@ The database is populated with the following 5 initial internship records:
 
 ---
 
-### 3. Get Single Internship by ID
-- **Endpoint**: `GET /api/internships/:id`
-- **Description**: Retrieves single internship details by ID.
-- **HTTP Code**: `200 OK` (if found) or `404 Not Found` (if missing)
-- **Sample Response (`200 OK`)**:
+### 3. Submit Internship Application
+- **Endpoint**: `POST /api/applications`
+- **Rate Limit**: Max 5 submissions per 15 mins per IP
+- **Request Payload**:
+```json
+{
+  "internshipId": "INT-101",
+  "applicantName": "Chiranjeevan Kumar",
+  "email": "chiranjeevan@example.com",
+  "coverLetter": "I am passionate about building responsive, accessible web interfaces and would love to contribute."
+}
+```
+- **Response (`201 Created`)**:
 ```json
 {
   "success": true,
+  "message": "Application submitted successfully",
   "data": {
-    "id": "INT-101",
-    "title": "Frontend Intern",
-    "description": "Work with modern frontend web technologies to build responsive user interfaces and interactive components.",
-    "domain": "Full Stack Development",
-    "location": "Remote India",
-    "skills": ["HTML", "CSS", "JavaScript"],
-    "openings": 3,
-    "created_at": "2026-10-27 02:55:00",
-    "updated_at": "2026-10-27 02:55:00"
-  }
-}
-```
-- **Sample Response (`404 Not Found`)**:
-```json
-{
-  "success": false,
-  "error": "Internship with ID 'INT-999' not found"
-}
-```
-
----
-
-### 4. Create New Internship
-- **Endpoint**: `POST /api/internships`
-- **Description**: Creates a new internship posting. ID is generated automatically by the server.
-- **HTTP Code**: `201 Created` (success) or `400 Bad Request` (validation error / client supplied ID)
-- **Sample Request Payload**:
-```json
-{
-  "title": "Backend Engineering Intern",
-  "description": "Develop high-performance REST APIs and microservices using Express and SQLite.",
-  "domain": "Cloud Infrastructure",
-  "location": "Remote India",
-  "skills": ["Node.js", "Express", "SQLite"],
-  "openings": 2
-}
-```
-- **Sample Response (`201 Created`)**:
-```json
-{
-  "success": true,
-  "message": "Internship created successfully",
-  "data": {
-    "id": "INT-106",
-    "title": "Backend Engineering Intern",
-    "description": "Develop high-performance REST APIs and microservices using Express and SQLite.",
-    "domain": "Cloud Infrastructure",
-    "location": "Remote India",
-    "skills": ["Node.js", "Express", "SQLite"],
-    "openings": 2,
-    "created_at": "2026-10-27 02:56:00",
-    "updated_at": "2026-10-27 02:56:00"
+    "id": "APP-1001",
+    "internshipId": "INT-101",
+    "applicantName": "Chiranjeevan Kumar",
+    "email": "chiranjeevan@example.com",
+    "coverLetter": "I am passionate about building responsive, accessible web interfaces...",
+    "status": "submitted",
+    "createdAt": "2026-10-27T03:16:00.000Z"
   }
 }
 ```
 
 ---
 
-### 5. Update Internship by ID
-- **Endpoint**: `PUT /api/internships/:id`
-- **Description**: Updates an existing internship record.
-- **HTTP Code**: `200 OK` (success), `400 Bad Request` (validation error), or `404 Not Found`
-- **Sample Request Payload**:
-```json
-{
-  "title": "Senior Frontend Intern",
-  "description": "Lead modern frontend web architecture using React and TypeScript.",
-  "domain": "Full Stack Development",
-  "location": "Hybrid Mumbai",
-  "skills": ["HTML", "CSS", "JavaScript", "React"],
-  "openings": 5
-}
-```
-- **Sample Response (`200 OK`)**:
+### 4. Fetch Submitted Applications
+- **Endpoint**: `GET /api/applications`
+- **Query Params**: `internshipId` *(optional filter)*
+- **Response (`200 OK`)**:
 ```json
 {
   "success": true,
-  "message": "Internship updated successfully",
-  "data": {
-    "id": "INT-101",
-    "title": "Senior Frontend Intern",
-    "description": "Lead modern frontend web architecture using React and TypeScript.",
-    "domain": "Full Stack Development",
-    "location": "Hybrid Mumbai",
-    "skills": ["HTML", "CSS", "JavaScript", "React"],
-    "openings": 5,
-    "updated_at": "2026-10-27 02:57:00"
-  }
+  "count": 1,
+  "data": [
+    {
+      "id": "APP-1001",
+      "internshipId": "INT-101",
+      "applicantName": "Chiranjeevan Kumar",
+      "email": "chiranjeevan@example.com",
+      "status": "submitted"
+    }
+  ]
 }
 ```
 
 ---
 
-### 6. Delete Internship by ID
-- **Endpoint**: `DELETE /api/internships/:id`
-- **Description**: Permanently removes an internship record from the database.
-- **HTTP Code**: `200 OK` (success) or `404 Not Found`
-- **Sample Response (`200 OK`)**:
-```json
-{
-  "success": true,
-  "message": "Internship deleted successfully",
-  "deletedId": "INT-105"
-}
-```
+## 🛡️ Security Protections Summary
+
+For full details, view [`SECURITY_CHECKLIST.md`](./SECURITY_CHECKLIST.md).
+- **Helmet Headers**: Clickjacking, MIME sniffing, and XSS defense headers configured.
+- **CORS Protection**: Restricted to allowed origins via `CLIENT_ORIGIN`.
+- **Rate Limiting**: Express rate limiters protect API endpoints and limit spam submission attacks.
+- **SQL Injection Defense**: 100% prepared SQL statements using `better-sqlite3`.
+- **Dual-Layer Validation**: Server-side Express middleware validates and normalizes all incoming fields.
 
 ---
 
-## 🧪 Automated Testing Results
+## 🧪 Automated Testing Verification
 
-The automated test suite in `tests/internship.test.ts` executes all integration and persistence tests in isolation:
+Execute all integration and security tests:
 
 ```bash
 npm test
 ```
 
-### Verified Test Summary:
-- ✅ `GET /api/health`: Returns 200 OK with database connection status.
-- ✅ `GET /api/internships`: Returns initial seed records (`INT-101` to `INT-105`) with `description` and `skills` as `string[]`.
-- ✅ Pagination: Correctly handles `page` and `limit` query parameters.
-- ✅ Search & Filtering: Filters records by search keyword across title, description, skills, domain, and location.
-- ✅ `GET /api/internships/:id`: Returns record details for valid ID and 404 for missing ID.
-- ✅ `POST /api/internships`: Auto-generates IDs (`INT-106`), rejects client-supplied IDs (400), validates description length, and enforces positive `openings` (> 0).
-- ✅ `PUT /api/internships/:id`: Updates existing record (200) and returns 404 for missing ID.
-- ✅ `DELETE /api/internships/:id`: Deletes record (200) and returns 404 for missing ID.
-- ✅ Genuine Persistence & Idempotency: Verifies records survive closing/reopening a SQLite file database, and re-running `seedDatabase()` does not duplicate records.
-
----
-
-## 📤 How to Push to Public GitHub Repository
-
-Follow these steps to push your project to your GitHub repository:
-
-```bash
-# 1. Initialize Git in the project root
-git init
-
-# 2. Add files and make initial commit
-git add .
-git commit -m "feat: complete Milestone 3 REST API with Express, SQLite, and automated tests"
-
-# 3. Rename branch to main
-git branch -M main
-
-# 4. Link your remote repository
-git remote add origin https://github.com/chiranjeevankumar/internship-rest-api.git
-
-# 5. Push to GitHub
-git push -u origin main
-```
+Verifies:
+- Service health & DB connection
+- Internship CRUD, search, pagination, and filter queries
+- Server auto-generated IDs & rejection of client-supplied IDs
+- Application submission success & database persistence
+- Validation rejections for invalid email format, short cover letters, and missing fields
+- 404 rejection on application submissions for non-existent internship IDs
+- File-based SQLite persistence across database close and reopen operations
 
 ---
 
 ## 👤 Author & Assignment Details
 
 - **Student Name**: Chiranjeevan Kumar
-- **Assignment**: Milestone 3 - REST API and Persistent Data
+- **Assignment**: Milestone 3 + Secure Application Integration
 - **Repository**: [chiranjeevankumar/internship-rest-api](https://github.com/chiranjeevankumar/internship-rest-api)
 - **License**: MIT

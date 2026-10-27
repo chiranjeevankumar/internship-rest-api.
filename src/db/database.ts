@@ -20,7 +20,7 @@ export interface InternshipResponse {
   description: string;
   domain: string;
   location: string;
-  skills: string[]; // Always returned as string[] to API clients
+  skills: string[]; // Returned as string[] to API clients
   openings: number;
   created_at?: string;
   updated_at?: string;
@@ -33,6 +33,33 @@ export interface InternshipInput {
   location: string;
   skills: string | string[];
   openings: number;
+}
+
+export interface ApplicationDBRow {
+  id: string;
+  internship_id: string;
+  applicant_name: string;
+  email: string;
+  cover_letter: string;
+  status: string;
+  created_at?: string;
+}
+
+export interface ApplicationResponse {
+  id: string;
+  internshipId: string;
+  applicantName: string;
+  email: string;
+  coverLetter: string;
+  status: string;
+  createdAt?: string;
+}
+
+export interface ApplicationInput {
+  internshipId: string;
+  applicantName: string;
+  email: string;
+  coverLetter: string;
 }
 
 export const SEED_INTERNSHIPS = [
@@ -135,6 +162,7 @@ export function getDatabase(dbPathOverride?: string): Database.Database {
 }
 
 export function initSchema(db: Database.Database) {
+  // Internships Table
   db.exec(`
     CREATE TABLE IF NOT EXISTS internships (
       id TEXT PRIMARY KEY,
@@ -149,7 +177,21 @@ export function initSchema(db: Database.Database) {
     );
   `);
 
-  // Migration check in case description column is missing in pre-existing DB file
+  // Applications Table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS applications (
+      id TEXT PRIMARY KEY,
+      internship_id TEXT NOT NULL,
+      applicant_name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      cover_letter TEXT NOT NULL,
+      status TEXT DEFAULT 'submitted',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (internship_id) REFERENCES internships(id) ON DELETE CASCADE
+    );
+  `);
+
+  // Column migration checks for existing tables
   try {
     const tableInfo = db.prepare('PRAGMA table_info(internships)').all() as any[];
     const hasDescription = tableInfo.some((col: any) => col.name === 'description');
@@ -198,6 +240,18 @@ export function mapRowToResponse(row: InternshipDBRow): InternshipResponse {
     openings: Number(row.openings),
     created_at: row.created_at,
     updated_at: row.updated_at
+  };
+}
+
+export function mapApplicationRowToResponse(row: ApplicationDBRow): ApplicationResponse {
+  return {
+    id: row.id,
+    internshipId: row.internship_id,
+    applicantName: row.applicant_name,
+    email: row.email,
+    coverLetter: row.cover_letter,
+    status: row.status,
+    createdAt: row.created_at
   };
 }
 
