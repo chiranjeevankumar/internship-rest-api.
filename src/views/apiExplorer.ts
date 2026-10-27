@@ -58,14 +58,14 @@ export function getApiExplorerHtml(): string {
         <p class="text-xs text-slate-400 mt-1">INT-101 to INT-105 auto-seeded without duplicates</p>
       </div>
       <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
-        <span class="text-xs text-slate-400 font-medium">Supported Capabilities</span>
-        <div class="text-lg font-bold text-white mt-1">Pagination & Filter</div>
-        <p class="text-xs text-slate-400 mt-1">Search, domain, location, page & limit support</p>
+        <span class="text-xs text-slate-400 font-medium">Privacy Protection</span>
+        <div class="text-lg font-bold text-emerald-400 mt-1">Protected Privacy</div>
+        <p class="text-xs text-slate-400 mt-1">GET /api/applications requires admin key</p>
       </div>
       <div class="bg-slate-800/60 border border-slate-700/60 rounded-xl p-4">
-        <span class="text-xs text-slate-400 font-medium">Validation & Tests</span>
-        <div class="text-lg font-bold text-emerald-400 mt-1">100% Verified</div>
-        <p class="text-xs text-slate-400 mt-1">Automated test suite with Supertest + Vitest</p>
+        <span class="text-xs text-slate-400 font-medium">Security Controls</span>
+        <div class="text-lg font-bold text-emerald-400 mt-1">Helmet & Rate Limit</div>
+        <p class="text-xs text-slate-400 mt-1">Strict CORS, error masking & DoS defense</p>
       </div>
     </div>
 
@@ -124,81 +124,44 @@ export function getApiExplorerHtml(): string {
               </div>
             </div>
 
-            <!-- GET Internship By ID -->
+            <!-- GET /api/applications (Protected Privacy Test) -->
             <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-700/70 space-y-2">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2.5">
-                  <span class="px-2 py-0.5 text-xs font-bold rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">GET</span>
-                  <span class="text-xs font-mono text-slate-200">/api/internships/:id</span>
+                  <span class="px-2 py-0.5 text-xs font-bold rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">GET</span>
+                  <span class="text-xs font-mono text-slate-200">/api/applications</span>
+                  <span class="text-[10px] text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded">Protected</span>
                 </div>
-                <button onclick="executeGetById()" class="px-2.5 py-1 text-xs font-semibold rounded bg-blue-600 hover:bg-blue-500 text-white transition">Fetch By ID</button>
               </div>
-              <div class="flex gap-2">
-                <input id="getByIdInput" type="text" value="INT-101" placeholder="INT-101" class="flex-1 text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-indigo-500">
-                <button onclick="document.getElementById('getByIdInput').value='INT-999'; executeGetById();" class="text-xs text-amber-400 hover:underline">Test 404</button>
+              <p class="text-[11px] text-slate-400">Protects applicant privacy by requiring x-admin-key header.</p>
+              <div class="space-y-1.5">
+                <input id="adminKeyHeaderInput" type="text" placeholder="Enter x-admin-key header value" class="w-full text-xs font-mono bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-indigo-500">
+                <div class="flex gap-2">
+                  <button onclick="fetchApi('/api/applications')" class="flex-1 py-1 px-2 text-xs font-semibold rounded bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700/50 transition">
+                    Test Unauthorized (No Key)
+                  </button>
+                  <button onclick="executeGetApplicationsWithKey()" class="flex-1 py-1 px-2 text-xs font-semibold rounded bg-emerald-700 hover:bg-emerald-600 text-white transition">
+                    Test With Key
+                  </button>
+                </div>
               </div>
             </div>
 
-            <!-- POST Create Internship -->
+            <!-- POST Submit Application -->
             <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-700/70 space-y-2">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2.5">
                   <span class="px-2 py-0.5 text-xs font-bold rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">POST</span>
-                  <span class="text-xs font-mono text-slate-200">/api/internships</span>
+                  <span class="text-xs font-mono text-slate-200">/api/applications</span>
                 </div>
-                <button onclick="executePostInternship()" class="px-2.5 py-1 text-xs font-semibold rounded bg-emerald-600 hover:bg-emerald-500 text-white transition">Create Record</button>
+                <button onclick="executePostApplication()" class="px-2.5 py-1 text-xs font-semibold rounded bg-emerald-600 hover:bg-emerald-500 text-white transition">Submit Application</button>
               </div>
-              <p class="text-[11px] text-slate-400">ID is auto-generated automatically by the server.</p>
-              <textarea id="postJsonBody" rows="5" class="w-full text-xs font-mono bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500">{
-  "title": "Backend Engineering Intern",
-  "description": "Develop high-performance REST APIs and microservices using Express and SQLite.",
-  "domain": "Cloud & Infrastructure",
-  "location": "Remote India",
-  "skills": ["Node.js", "Express", "SQLite"],
-  "openings": 2
+              <textarea id="appJsonBody" rows="5" class="w-full text-xs font-mono bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500">{
+  "internshipId": "INT-101",
+  "applicantName": "Chiranjeevan Kumar",
+  "email": "chiranjeevan@example.com",
+  "coverLetter": "I am passionate about building accessible web interfaces and microservices using Express and SQLite."
 }</textarea>
-              <div class="flex justify-between text-xs">
-                <button onclick="setInvalidPostPayload()" class="text-amber-400 hover:underline">Test Validation Failure (400)</button>
-                <button onclick="resetPostPayload()" class="text-slate-400 hover:underline">Reset Sample Body</button>
-              </div>
-            </div>
-
-            <!-- PUT Update Internship -->
-            <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-700/70 space-y-2">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2.5">
-                  <span class="px-2 py-0.5 text-xs font-bold rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">PUT</span>
-                  <span class="text-xs font-mono text-slate-200">/api/internships/:id</span>
-                </div>
-                <button onclick="executePutInternship()" class="px-2.5 py-1 text-xs font-semibold rounded bg-amber-600 hover:bg-amber-500 text-white transition">Update Record</button>
-              </div>
-              <div class="flex gap-2 mb-1">
-                <input id="putIdInput" type="text" value="INT-101" placeholder="ID to update" class="w-28 text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-indigo-500">
-                <span class="text-xs text-slate-400 self-center">Target Record ID</span>
-              </div>
-              <textarea id="putJsonBody" rows="5" class="w-full text-xs font-mono bg-slate-800 border border-slate-700 rounded p-2 text-slate-200 focus:outline-none focus:border-indigo-500">{
-  "title": "Senior Frontend Intern",
-  "description": "Lead frontend component architecture with React, TypeScript, and modern CSS tools.",
-  "domain": "Full Stack Development",
-  "location": "Remote India",
-  "skills": ["HTML", "CSS", "JavaScript", "React"],
-  "openings": 5
-}</textarea>
-            </div>
-
-            <!-- DELETE Internship -->
-            <div class="p-3 rounded-lg bg-slate-900/80 border border-slate-700/70 space-y-2">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2.5">
-                  <span class="px-2 py-0.5 text-xs font-bold rounded bg-rose-500/20 text-rose-400 border border-rose-500/30">DELETE</span>
-                  <span class="text-xs font-mono text-slate-200">/api/internships/:id</span>
-                </div>
-                <button onclick="executeDeleteInternship()" class="px-2.5 py-1 text-xs font-semibold rounded bg-rose-600 hover:bg-rose-500 text-white transition">Delete Record</button>
-              </div>
-              <div class="flex gap-2">
-                <input id="deleteIdInput" type="text" value="INT-105" placeholder="INT-105" class="flex-1 text-xs bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200 focus:outline-none focus:border-indigo-500">
-                <span class="text-xs text-slate-400 self-center">Specify ID to remove</span>
-              </div>
             </div>
           </div>
         </div>
@@ -265,10 +228,8 @@ export function getApiExplorerHtml(): string {
       badgeEl.textContent = 'PENDING...';
 
       try {
-        const res = await fetch(url, {
-          headers: { 'Content-Type': 'application/json' },
-          ...options
-        });
+        const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+        const res = await fetch(url, { ...options, headers });
         const data = await res.json();
         const statusText = res.status + ' ' + res.statusText;
         
@@ -315,67 +276,24 @@ export function getApiExplorerHtml(): string {
       fetchApi(url);
     }
 
-    function executeGetById() {
-      const id = document.getElementById('getByIdInput').value.trim();
-      if (!id) return alert('Please enter an ID');
-      fetchApi('/api/internships/' + encodeURIComponent(id));
+    function executeGetApplicationsWithKey() {
+      const key = document.getElementById('adminKeyHeaderInput').value.trim();
+      fetchApi('/api/applications', {
+        headers: { 'x-admin-key': key }
+      });
     }
 
-    function executePostInternship() {
-      const bodyStr = document.getElementById('postJsonBody').value;
+    function executePostApplication() {
+      const bodyStr = document.getElementById('appJsonBody').value;
       try {
         const body = JSON.parse(bodyStr);
-        fetchApi('/api/internships', {
+        fetchApi('/api/applications', {
           method: 'POST',
           body: JSON.stringify(body)
         });
       } catch (e) {
         alert('Invalid JSON payload string in body editor: ' + e.message);
       }
-    }
-
-    function executePutInternship() {
-      const id = document.getElementById('putIdInput').value.trim();
-      if (!id) return alert('Please enter an ID to update');
-      const bodyStr = document.getElementById('putJsonBody').value;
-      try {
-        const body = JSON.parse(bodyStr);
-        fetchApi('/api/internships/' + encodeURIComponent(id), {
-          method: 'PUT',
-          body: JSON.stringify(body)
-        });
-      } catch (e) {
-        alert('Invalid JSON payload string in body editor: ' + e.message);
-      }
-    }
-
-    function executeDeleteInternship() {
-      const id = document.getElementById('deleteIdInput').value.trim();
-      if (!id) return alert('Please enter an ID to delete');
-      if (confirm('Are you sure you want to delete internship record ' + id + '?')) {
-        fetchApi('/api/internships/' + encodeURIComponent(id), {
-          method: 'DELETE'
-        });
-      }
-    }
-
-    function setInvalidPostPayload() {
-      document.getElementById('postJsonBody').value = JSON.stringify({
-        title: "A",
-        description: "Short",
-        openings: 0 // invalid openings <= 0
-      }, null, 2);
-    }
-
-    function resetPostPayload() {
-      document.getElementById('postJsonBody').value = JSON.stringify({
-        title: "Backend Engineering Intern",
-        description: "Develop high-performance REST APIs and microservices using Express and SQLite.",
-        domain: "Cloud & Infrastructure",
-        location: "Remote India",
-        skills: ["Node.js", "Express", "SQLite"],
-        openings: 2
-      }, null, 2);
     }
 
     async function refreshDatabaseTable() {

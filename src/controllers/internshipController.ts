@@ -25,11 +25,13 @@ export function getHealth(req: Request, res: Response): void {
       uptimeSeconds: Math.floor((Date.now() - startTime) / 1000)
     });
   } catch (error: any) {
+    console.error('[DATABASE ERROR] Health check failed:', error);
+    const isProd = process.env.NODE_ENV === 'production';
     res.status(500).json({
       success: false,
       status: 'ERROR',
-      message: 'Database check failed',
-      error: error.message
+      message: isProd ? 'Database check failed' : 'Database check failed',
+      error: isProd ? 'An internal error occurred during health check.' : error.message
     });
   }
 }
@@ -99,10 +101,12 @@ export function getInternships(req: Request, res: Response): void {
       data: internships
     });
   } catch (error: any) {
+    console.error('[DATABASE ERROR] Failed to retrieve internships:', error);
+    const isProd = process.env.NODE_ENV === 'production';
     res.status(500).json({
       success: false,
       error: 'Failed to retrieve internships',
-      details: error.message
+      details: isProd ? 'An internal error occurred.' : error.message
     });
   }
 }
@@ -129,10 +133,12 @@ export function getInternshipById(req: Request, res: Response): void {
       data: mapRowToResponse(rawRow)
     });
   } catch (error: any) {
+    console.error(`[DATABASE ERROR] Failed to fetch internship ${req.params.id}:`, error);
+    const isProd = process.env.NODE_ENV === 'production';
     res.status(500).json({
       success: false,
       error: 'Failed to fetch internship details',
-      details: error.message
+      details: isProd ? 'An internal error occurred.' : error.message
     });
   }
 }
@@ -182,10 +188,12 @@ export function createInternship(req: Request, res: Response): void {
       data: mapRowToResponse(rawRow)
     });
   } catch (error: any) {
+    console.error('[DATABASE ERROR] Failed to create internship:', error);
+    const isProd = process.env.NODE_ENV === 'production';
     res.status(500).json({
       success: false,
       error: 'Failed to create internship',
-      details: error.message
+      details: isProd ? 'An internal error occurred.' : error.message
     });
   }
 }
@@ -230,10 +238,12 @@ export function updateInternship(req: Request, res: Response): void {
       data: mapRowToResponse(rawRow)
     });
   } catch (error: any) {
+    console.error(`[DATABASE ERROR] Failed to update internship ${req.params.id}:`, error);
+    const isProd = process.env.NODE_ENV === 'production';
     res.status(500).json({
       success: false,
       error: 'Failed to update internship',
-      details: error.message
+      details: isProd ? 'An internal error occurred.' : error.message
     });
   }
 }
@@ -262,10 +272,12 @@ export function deleteInternship(req: Request, res: Response): void {
       deletedId: id
     });
   } catch (error: any) {
+    console.error(`[DATABASE ERROR] Failed to delete internship ${req.params.id}:`, error);
+    const isProd = process.env.NODE_ENV === 'production';
     res.status(500).json({
       success: false,
       error: 'Failed to delete internship',
-      details: error.message
+      details: isProd ? 'An internal error occurred.' : error.message
     });
   }
 }

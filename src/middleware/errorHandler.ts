@@ -13,7 +13,7 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ): void {
-  console.error('Unhandled Error:', err);
+  console.error('[UNHANDLED ERROR]', err);
 
   // Body parser JSON error
   if (err instanceof SyntaxError && 'status' in err && (err as any).status === 400 && 'body' in err) {
@@ -24,9 +24,11 @@ export function errorHandler(
     return;
   }
 
+  const isProd = process.env.NODE_ENV === 'production';
+
   res.status(500).json({
     success: false,
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'An unexpected error occurred on the server.'
+    error: isProd ? 'An internal server error occurred.' : 'Internal Server Error',
+    message: isProd ? 'An unexpected error occurred on the server.' : err.message
   });
 }

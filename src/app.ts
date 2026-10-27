@@ -10,7 +10,7 @@ import { seedDatabase } from './db/database.js';
 
 const app = express();
 
-// Trust proxy header for reverse proxy / Cloud Run environments
+// Enable trust proxy for reverse proxy / Cloud Run load balancers
 app.set('trust proxy', 1);
 
 // Security Headers with Helmet
@@ -20,19 +20,23 @@ app.use(
   })
 );
 
-// CORS Configuration
-const allowedOrigins = (process.env.CLIENT_ORIGIN || '*').split(',').map((s) => s.trim());
+// CORS Configuration: Strict Origin Policy for Production
+const isProd = process.env.NODE_ENV === 'production';
+const rawOrigins = process.env.CLIENT_ORIGIN || (isProd ? '' : '*');
+const allowedOrigins = rawOrigins.split(',').map((s) => s.trim()).filter(Boolean);
+
 app.use(
   cors({
     origin: (origin, callback) => {
+      // In development/test mode without explicit origins, or when origin is in allowed list
       if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        callback(new Error('CORS policy: Access denied for origin.'));
+        callback(new Error('CORS policy violation: Access denied for origin.'));
       }
     },
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key']
   })
 );
 
@@ -45,7 +49,7 @@ const isTest = process.env.NODE_ENV === 'test';
 
 export const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: isTest ? 1000 : 100, // Allow high limit in test environment to prevent test interference
+  max: isTest ? 1000 : 100, // Allow high limit in test environment
   standardHeaders: true,
   legacyHeaders: false,
   validate: { trustProxy: false },

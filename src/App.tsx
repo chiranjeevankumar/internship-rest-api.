@@ -14,7 +14,8 @@ import {
   RefreshCw,
   Code2,
   ShieldCheck,
-  ExternalLink
+  Lock,
+  Key
 } from 'lucide-react';
 
 interface Internship {
@@ -65,12 +66,13 @@ export default function App() {
   const [submissionSuccess, setSubmissionSuccess] = useState<Application | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
 
-  // Applications Drawer State
+  // Admin Applications Drawer State
   const [showApplicationsDrawer, setShowApplicationsDrawer] = useState<boolean>(false);
+  const [adminKey, setAdminKey] = useState<string>('');
   const [applications, setApplications] = useState<Application[]>([]);
   const [loadingApplications, setLoadingApplications] = useState<boolean>(false);
+  const [appsError, setAppsError] = useState<string | null>(null);
 
-  // Domains & Locations derived for filter dropdowns
   const domains = ['All', 'Full Stack Development', 'UI/UX', 'Data Analytics', 'Cyber Security'];
   const locations = ['All', 'Remote India', 'Hybrid Pune', 'On-site Bengaluru'];
 
@@ -103,17 +105,32 @@ export default function App() {
     fetchInternships();
   }, [searchQuery, domainFilter, locationFilter]);
 
-  // Fetch Submitted Applications
-  const fetchApplications = async () => {
+  // Fetch Submitted Applications (Requires Admin Authorization Header)
+  const fetchApplications = async (keyToUse?: string) => {
+    const key = keyToUse !== undefined ? keyToUse : adminKey;
     setLoadingApplications(true);
+    setAppsError(null);
     try {
-      const res = await fetch(`${API_BASE_URL}/applications`);
-      const json = await res.json();
-      if (res.ok && json.success) {
-        setApplications(json.data || []);
+      const headers: HeadersInit = {};
+      if (key) {
+        headers['x-admin-key'] = key.trim();
       }
-    } catch (e) {
-      console.error('Failed to load applications:', e);
+
+      const res = await fetch(`${API_BASE_URL}/applications`, { headers });
+      const json = await res.json();
+
+      if (res.status === 401) {
+        throw new Error('401 Unauthorized: Valid Admin Key required to access private applicant data.');
+      }
+
+      if (!res.ok || !json.success) {
+        throw new Error(json.error || 'Failed to load applications');
+      }
+
+      setApplications(json.data || []);
+    } catch (e: any) {
+      setAppsError(e.message || 'Failed to load applications');
+      setApplications([]);
     } finally {
       setLoadingApplications(false);
     }
@@ -121,7 +138,9 @@ export default function App() {
 
   const handleOpenApplicationsDrawer = () => {
     setShowApplicationsDrawer(true);
-    fetchApplications();
+    if (adminKey) {
+      fetchApplications(adminKey);
+    }
   };
 
   // Open Application Modal
@@ -228,8 +247,8 @@ export default function App() {
               onClick={handleOpenApplicationsDrawer}
               className="px-3.5 py-2 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-2"
             >
-              <FileText className="w-4 h-4 text-indigo-400" />
-              <span>View Submitted Applications</span>
+              <Lock className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Admin Records Portal</span>
             </button>
             <a
               href="/"
@@ -251,13 +270,13 @@ export default function App() {
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Helmet & Rate Limiting Protected</span>
+              <span>Protected Applicant Privacy & Rate Limiting</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
               Explore Available Internships
             </h2>
             <p className="text-sm text-slate-300">
-              Find internship opportunities across full stack development, UI/UX, analytics, and security. Submit your application with server-validated security checks.
+              Find internship opportunities across full stack development, UI/UX, analytics, and security. Submit your application securely to the backend REST API.
             </p>
           </div>
 
@@ -271,7 +290,6 @@ export default function App() {
 
         {/* Search & Filter Bar */}
         <div className="bg-slate-900/80 border border-slate-800 rounded-xl p-4 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-          {/* Search Input */}
           <div className="md:col-span-6 relative">
             <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
             <input
@@ -283,7 +301,6 @@ export default function App() {
             />
           </div>
 
-          {/* Domain Filter */}
           <div className="md:col-span-3">
             <select
               value={domainFilter}
@@ -299,7 +316,6 @@ export default function App() {
             </select>
           </div>
 
-          {/* Location Filter */}
           <div className="md:col-span-3">
             <select
               value={locationFilter}
@@ -462,7 +478,6 @@ export default function App() {
                 )}
 
                 <form onSubmit={handleSubmitApplication} className="space-y-4">
-                  {/* Full Name */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 mb-1">
                       Applicant Full Name *
@@ -480,7 +495,6 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* Email Address */}
                   <div>
                     <label className="block text-xs font-semibold text-slate-300 mb-1">
                       Email Address *
@@ -498,7 +512,6 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* Cover Letter */}
                   <div>
                     <div className="flex justify-between items-center mb-1">
                       <label className="text-xs font-semibold text-slate-300">
@@ -555,17 +568,17 @@ export default function App() {
         </div>
       )}
 
-      {/* Submitted Applications Drawer */}
+      {/* Submitted Applications Drawer (Admin Privacy Protected) */}
       {showApplicationsDrawer && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex justify-end">
           <div className="bg-slate-900 border-l border-slate-800 max-w-xl w-full h-full p-6 space-y-6 overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-indigo-400" />
-                  Submitted Applications
+                  <Lock className="w-4 h-4 text-indigo-400" />
+                  Admin Applications Portal
                 </h3>
-                <p className="text-xs text-slate-400">Stored in SQLite <code className="text-indigo-300">applications</code> table</p>
+                <p className="text-xs text-slate-400">Requires valid Admin API Key for PII access</p>
               </div>
               <button
                 onClick={() => setShowApplicationsDrawer(false)}
@@ -575,15 +588,48 @@ export default function App() {
               </button>
             </div>
 
+            {/* Admin Key Authentication Input */}
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+              <label className="block text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                <Key className="w-3.5 h-3.5 text-amber-400" />
+                Enter Admin Authorization API Key:
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  placeholder="Enter admin key (e.g. admin-secret-key-123)"
+                  value={adminKey}
+                  onChange={(e) => setAdminKey(e.target.value)}
+                  className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-mono"
+                />
+                <button
+                  onClick={() => fetchApplications(adminKey)}
+                  className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition"
+                >
+                  Authenticate
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-500">
+                Backend enforces 401 Unauthorized unless a valid key matching <code className="text-slate-400">ADMIN_API_KEY</code> is provided.
+              </p>
+            </div>
+
+            {appsError && (
+              <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-500/30 text-xs text-rose-300 flex items-start gap-2">
+                <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+                <div>{appsError}</div>
+              </div>
+            )}
+
             {loadingApplications ? (
               <div className="py-12 text-center text-xs text-slate-400 space-y-2">
                 <Loader2 className="w-6 h-6 text-indigo-400 animate-spin mx-auto" />
-                <p>Fetching submitted applications...</p>
+                <p>Authenticating and loading applications...</p>
               </div>
-            ) : applications.length === 0 ? (
+            ) : applications.length === 0 && !appsError ? (
               <div className="py-12 text-center text-xs text-slate-500 space-y-2">
                 <FileText className="w-8 h-8 text-slate-600 mx-auto" />
-                <p>No applications submitted yet.</p>
+                <p>Enter valid admin key above to view applicant records.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -600,7 +646,7 @@ export default function App() {
                       <span className="font-semibold text-slate-200">{app.internshipId}</span>
                     </div>
                     <div>
-                      <span className="text-slate-400">Applicant: </span>
+                      <span className="text-slate-400">Applicant Name: </span>
                       <span className="text-slate-200 font-medium">{app.applicantName}</span> ({app.email})
                     </div>
                     <div className="p-2.5 rounded bg-slate-900 border border-slate-800 text-slate-300 text-[11px] italic">

@@ -315,9 +315,9 @@ describe('Internship REST API Test Suite', () => {
     });
   });
 
-  // 10. POST /api/applications & Application Validation Tests
-  describe('10. POST /api/applications (Application Submission & Validation)', () => {
-    it('should submit an application successfully for an existing internship', async () => {
+  // 10. POST /api/applications & Application Authorization Tests
+  describe('10. POST /api/applications & Privacy Protection Tests', () => {
+    it('should submit an application successfully without requiring admin key', async () => {
       const payload = {
         internshipId: 'INT-101',
         applicantName: 'Chiranjeevan Kumar',
@@ -379,12 +379,49 @@ describe('Internship REST API Test Suite', () => {
       expect(res.body.error).toContain("Internship with ID 'INT-999' not found");
     });
 
-    it('should list submitted applications via GET /api/applications', async () => {
+    it('should return 401 Unauthorized for GET /api/applications when authorization header is missing', async () => {
       const res = await request(app).get('/api/applications');
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('Unauthorized');
+    });
+
+    it('should return 401 Unauthorized for GET /api/applications when incorrect admin key is provided', async () => {
+      const res = await request(app)
+        .get('/api/applications')
+        .set('x-admin-key', 'wrong-invalid-admin-key');
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('Unauthorized');
+    });
+
+    it('should list submitted applications via GET /api/applications when valid x-admin-key header is provided', async () => {
+      const adminKey = process.env.ADMIN_API_KEY || 'admin-secret-key-123';
+      const res = await request(app)
+        .get('/api/applications')
+        .set('x-admin-key', adminKey);
+
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data).toBeInstanceOf(Array);
       expect(res.body.count).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  // 11. Security & Production Error Masking Tests
+  describe('11. Security & Production Error Masking Tests', () => {
+    it('should mask internal database error details in production environment mode', async () => {
+      const originalEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'production';
+
+      try {
+        const res = await request(app).get('/api/internships/INT-NON-EXISTENT-XYZ');
+        expect(res.status).toBe(404);
+        expect(res.body.success).toBe(false);
+        expect(res.body.stack).toBeUndefined();
+      } finally {
+        process.env.NODE_ENV = originalEnv;
+      }
     });
   });
 });
